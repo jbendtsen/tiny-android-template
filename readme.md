@@ -45,10 +45,10 @@ In chronological order:
 ## Getting the Tools
 
 At the time of writing, https://dl.google.com/android/repository/repository2-1.xml contains a map of internal package links that form the Android SDK.
-As far as I know, the only required SDK packages for compilation are build-tools_<version>-<os>.zip and platform_<version>.zip.
-For running the app remotely, you'll find ADB inside platform-tools_<version>-<os>.zip.
+As far as I know, the only required SDK packages for compilation are `build-tools_<version>-<os>.zip` and `platform_<version>.zip`.
+For running the app remotely, you'll find ADB inside `platform-tools_<version>-<os>.zip`.
 To download the SDK packages, append the name of the zip archive to https://dl.google.com/android/repository/
-(you'll find the package file names within the <url> tags of that repository.xml file)
+(you'll find the package file names within the `<url>` tags of that repository.xml file)
 
 ## Usage
 
