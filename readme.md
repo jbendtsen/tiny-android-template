@@ -53,19 +53,19 @@ To download the SDK packages, append the name of the zip archive to https://dl.g
 ## Usage
 
 1) Get library packages
-`./get-packages.sh pkg-list.txt`
+- `./get-packages.sh pkg-list.txt`
 
 2) Unpack & merge libraries
-`./export-libs.pl`
+- `./export-libs.pl`
 
 3) Build libraries
-`./link.pl`
+- `./link.pl`
 
 4) Create APK (you will need a KeyStore file for this. See "Notes" for details.)
-`./make.sh`
+- `./make.sh`
 
 5) Install and run the app on a real device using ADB
-`./run.sh`
+- `./run.sh`
 
 If your list of libraries change, go to step 2.
 
