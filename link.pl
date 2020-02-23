@@ -13,6 +13,10 @@ my $PLATFORM_DIR = "$SDK_DIR/platforms/$ANDROID_VER";
 my $LIB_RES_DIR   = "lib/res";
 my $LIB_CLASS_DIR = "lib/classes";
 
+# Every library/package that uses resources needs a list that maps resource variables to IDs in code form.
+# It starts with a simple text file that gets translated into a .java, which is in turn compiled into the package.
+# All that's needed is a simple re-formatting for each line, with a few Java keywords and curly braces in-between.
+
 sub gen_rjava {
 	my $pkg = shift;
 	my $r_txt = shift;
@@ -43,6 +47,9 @@ sub gen_rjava {
 	return \@out;
 }
 
+# The only reason this script cares about the AndroidManifest.xml file (found inside every APK and AAR)
+#  is so that it can consistently find the name of the package, which is what this function does
+
 sub get_package_from_manifest {
 	my $path = shift;
 
@@ -64,6 +71,13 @@ sub get_package_from_manifest {
 
 	return undef;
 }
+
+# This function creates an R.txt file based on the resources in the 'res' folder of the main project,
+#  which is later turned into R.java and finally R.jar.
+# Essentially, each values XML is scanned for strings or other values defined on a particular line,
+#  and everything else is just scanned for its file name.
+# The ID that each resource is given here is unimportant other than that it needs to be unique merely within this generated document.
+# All resource IDs (including these ones) get overwritten later.
 
 sub gen_proj_rtxt {
 	my @r_txt = ();
@@ -106,6 +120,11 @@ sub gen_proj_rtxt {
 	close($fh);
 }
 
+# This is the big one. This is where all resource IDs get overwritten.
+# When AAPT2 links all resources from all the libraries (and the main project) together, it reallocates all IDs so that they are unique.
+# We take the new list of IDs and apply it to the each package's resource listing, which AAPT2 doesn't do for us.
+# After this, there should be no resource collisions at app runtime.
+
 sub update_res_ids {
 	my $ids = shift;
 	my $r_list = shift;
@@ -114,6 +133,7 @@ sub update_res_ids {
 	my $fmt = "";   # format string to pack the list of files into a single blob
 	my @files = ();
 
+	# Load each R.txt
 	my $size = 0;
 	foreach (@$r_list) {
 		open(my $fh, '<:raw', $_);
@@ -128,42 +148,44 @@ sub update_res_ids {
 	}
 	push(@table, $size);
 
+	# Make a copy of each R.txt and embed it into one homogenous string.
+	# This should make the regexes faster, since there won't be any additional cache misses or what have you
 	my $blob = pack($fmt, @files);
 
+	# Make an index of replacements to happen later. This means there (shouldn't) be any search-replace ordering issues.
 	my @repl_list = ();
 
+	# For each line in the AAPT2 'ids.txt' output
 	foreach (@$ids) {
+		# Hard-coded 10 == length("0xnnnnnnnn"), the 32-bit hex number scheme that IDs use in text form
 		my $new_id = substr($_, -10);
 
 		my $nm_start = index($_, ':') + 1;
 		my $nm_end = index($_, ' ') + 1;
 
-		# name will look like "type variable "
+		# 'name' will look like "type variable "
 		my $name = substr($_, $nm_start, $nm_end - $nm_start);
 		$name =~ s/\// /;
 
-		#print("\n$name: $new_id\n");
-
-		# for each instance where 'name' gets defined as a single ID:
+		# For each instance where 'name' gets defined as a single ID:
 		my $name_reg = qr/$name(0x[0-9a-fA-F]+)/;
 		while ($blob =~ /$name_reg/g) {
 			my $match_len = length($1);
 			my $off = (pos $blob) - $match_len;
 			next if ($off < 0);
 
-			# if the ID is not a complete ID (likely 0x0), just mark a single replacement
+			# If the ID is not a complete ID (likely 0x0), just mark a single replacement
 			if ($match_len != 10) {
 				push(@repl_list, {"off" => $off, "len" => $match_len, "new" => $new_id});
 				next;
 			}
 
-			# find the current file
+			# Find the current file
 			my $file_idx = 0;
 			$file_idx++ while ($table[$file_idx] < $off);
 			$file_idx--;
 
-			#print("\tfound def in ${\$r_list->[$file_idx]}\n");
-
+			# Find all instances of the old ID for this new ID so we can replace them all
 			my $id_reg = qr/$1/;
 			while ($files[$file_idx] =~ /$id_reg/g) {
 				my $pos = (pos $files[$file_idx]) - $match_len;
@@ -174,7 +196,7 @@ sub update_res_ids {
 		}
 	}
 
-	# since @ids (from ids.txt by aapt2 link) is not sorted in a convenient order, we sort the replacement list here
+	# Since @ids (from ids.txt by AAPT2 link) is not sorted in a convenient order, we sort the replacement list here
 	#  so that for each offset, the necessary displacement can be calculated linearly
 	my @replacements = sort { $a->{"off"} <=> $b->{"off"} } @repl_list;
 
@@ -182,22 +204,31 @@ sub update_res_ids {
 	my $file_idx = 0;
 	my $disp = 0;
 
-	# this assumes that at least one replacement is needed in each file
+	# This assumes that at least one replacement is needed in each file
 	for (my $i = 0; $i < $n_repl; $i++) {
 		my $repl = $replacements[$i];
 		my $off = $repl->{"off"};
 		my $len = $repl->{"len"};
 
+		# We need to update the table of file offsets so that we can write the correct range of bytes to the intended file later
 		while ($off > $table[$file_idx + 1]) {
 			$file_idx++;
 			$table[$file_idx] += $disp;
 		}
 
+		# Actually replace the old ID with the new one.
+		# The key here is that the new ID may not necessarily be the same length as the old one,
+		#  so everything after this replacement may get shifted up/down.
+		# A displacement is calculated as we go so that the current offset is always up to date.
+
 		substr($blob, $off + $disp, $len) = $repl->{"new"};
 		$disp += 10 - $len; # disp += length($repl->{"new"}) - $len
 	}
+
+	# Make sure the last file has its size corrected as well
 	$table[-1] += $disp;
 
+	# Overwrite all the R.txts
 	my $idx = 0;
 	foreach (@$r_list) {
 		open(my $fh, '>', $_);
@@ -207,6 +238,10 @@ sub update_res_ids {
 		$idx++;
 	}
 }
+
+# This function iterates over every AAR, finds its R.txt, generates R.java and compiles it,
+#  placing the resulting .class files inside the already extracted classes folder for the current package.
+# This means when the library is properly compiled into a JAR later, it knows how to access its own resources.
 
 sub compile_libs {
 	foreach (<lib/*.aar>) {
@@ -245,6 +280,8 @@ sub compile_libs {
 	}
 }
 
+# Entry-point
+
 if (-d "lib" && not (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR)) {
 	print(
 		"This stage depends on library resources already being compiled.\n",
@@ -260,18 +297,15 @@ system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
 
 print("Compiling project resources...\n");
 
-# system("$TOOLS_DIR/aapt package -f -m -J "R" -M AndroidManifest.xml -S res -I $PLATFORM_DIR/android.jar");
 system("$TOOLS_DIR/aapt2 compile -o build/res.zip --dir res");
 
 print("Linking resources...\n");
 
+# This is what gives us the actual set of properly unique IDs
 system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt build/res.zip build/res_libs.zip");
+exit if ($? != 0);
 
-if ($? != 0) {
-	print("Resource linking failed\n");
-	exit;
-}
-
+# Load those unique IDs
 open(my $fh, '<', "ids.txt");
 chomp(my @ids = <$fh>);
 close($fh);
@@ -311,6 +345,7 @@ chomp(my @r_txt = <$fh>);
 close($fh);
 
 my $r_java = gen_rjava($pkg, \@r_txt);
+
 open($fh, '>', "build/R.java");
 print $fh join("\n", @$r_java);
 close($fh);
