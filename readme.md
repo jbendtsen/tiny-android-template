@@ -21,7 +21,7 @@ Does Not Require:
 	- UI mark-up
 - `res/values/strings.xml`
 	- Externalised strings
-- `src/MainActivity.java`
+- `src/MainActivity.kt` OR `src-java/MainActivity.java`
 	- The actual program
 - `AndroidManifest.xml`
 	- Header for the app
@@ -73,6 +73,9 @@ If your list of libraries change, go to step 2.
 If you create or delete (or possibly rename) any resources, go to step 3.
 
 Otherwise, simply running make.sh should be enough to ensure that you have a fresh build.
+
+The `make.sh` script will compile anything that's in the `src` folder.
+To compile the Java version, simply rename the `src` folder to something else and rename `src-java` to `src`.
 
 ## Notes
 
