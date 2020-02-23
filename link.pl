@@ -253,18 +253,19 @@ if (-d "lib" && not (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR)) {
 	exit;
 }
 
-print("Compiling project resources...\n");
+print("Compiling library resources...\n");
 
 mkdir("build") if (!-d "build");
+system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
+
+print("Compiling project resources...\n");
 
 # system("$TOOLS_DIR/aapt package -f -m -J "R" -M AndroidManifest.xml -S res -I $PLATFORM_DIR/android.jar");
 system("$TOOLS_DIR/aapt2 compile -o build/res.zip --dir res");
 
 print("Linking resources...\n");
 
-my $res = "build/res.zip";
-$res .= " build/res_libs.zip" if (-f "build/res_libs.zip");
-system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt $res");
+system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt build/res.zip build/res_libs.zip");
 
 if ($? != 0) {
 	print("Resource linking failed\n");
@@ -313,3 +314,9 @@ my $r_java = gen_rjava($pkg, \@r_txt);
 open($fh, '>', "build/R.java");
 print $fh join("\n", @$r_java);
 close($fh);
+
+print("Compiling project R.java...\n");
+
+mkdir("build/R") if (!-d "build/R");
+system("javac -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar build/R.java -d build/R");
+system("jar --create --file build/R.jar -C build/R .");

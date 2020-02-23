@@ -1,9 +1,10 @@
 # Tiny Android Template
 
-*For Android projects written in Java, using the latest AndroidX libraries*
+*For Android projects written in Kotlin and/or Java, using the latest AndroidX libraries*
 
 Requirements:
 - Java Development Kit (JDK)
+- *optional* Kotlin Compiler
 - Android SDK
 - 7-Zip
 - Bash & Perl (Cygwin/MSYS if on Windows)
@@ -42,7 +43,7 @@ In chronological order:
 - `logs.sh`
 	- Retrieves ADB logcat logs
 
-## Getting the Tools
+## Getting the Android SDK
 
 At the time of writing, https://dl.google.com/android/repository/repository2-1.xml contains a map of internal package links that form the Android SDK.
 As far as I know, the only required SDK packages for compilation are `build-tools_<version>-<os>.zip` and `platform_<version>.zip`.
@@ -77,7 +78,7 @@ Otherwise, simply running make.sh should be enough to ensure that you have a fre
 
 As long as your JDK version can target Java 8, this should work. Tested with OpenJDK 13.0.2.
 
-You will need to make sure the "bin" directories for the JDK and for 7-Zip are in the $PATH variable.
+You will need to make sure the "bin" directories for the JDK and for 7-Zip (and the Kotlin compiler if you're using Kotlin) are in the $PATH variable.
 
 In order to build the APK, `apksigner` needs a KeyStore file. This can be generated with `keytool`, which comes with the JDK.
 

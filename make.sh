@@ -18,6 +18,8 @@ JAR_TOOLS="java -Xmx1024M -Xss1m -jar $TOOLS_DIR/lib"
 KEYSTORE="keystore.jks"
 KS_PASS="123456"
 
+FIND="/usr/bin/find"
+
 if [ ! -d "build" ]; then
 	echo Build directory not found.
 	echo proj-compile-res.sh needs to be run before this script.
@@ -26,12 +28,30 @@ fi
 
 echo Cleaning build...
 
-rm build/*.apk 2> /dev/null
+# Deletes all folders and APK files inside the build folder
+rm build/*.apk */ 2> /dev/null
 
 echo Compiling project source...
 
-# Compile the project
-javac -source 8 -target 8 -classpath "R;build/libs.jar" -bootclasspath $PLATFORM_DIR/android.jar -d build src/*.java build/R.java || exit
+java_list=`$FIND src -name "*.java"`
+kt_list=`$FIND src -name "*.kt"`
+
+# if string length of java_list > 2; then ...
+# I picked '2' in case new lines bump it up from 0, though it's likely overkill
+found_src=0
+if [ ${#java_list} -gt 2 ]; then
+	javac -source 8 -target 8 -classpath "build/R.jar;build/libs.jar" -bootclasspath $PLATFORM_DIR/android.jar -d build $java_list || exit
+	found_src=1
+fi
+if [ ${#kt_list} -gt 2 ]; then
+	kotlinc -d build -cp "build/R.jar;build/libs.jar;$PLATFORM_DIR/android.jar" -jvm-target 1.8 $kt_list || exit
+	found_src=1
+fi
+
+if (( ! $found_src )); then
+	echo No project sources were found in the 'src' folder.
+	exit
+fi
 
 echo Compiling classes into DEX bytecode...
 

@@ -179,8 +179,3 @@ foreach (keys %xml_hash) {
 	print $fh join("\n", @{$xml_hash{$_}});
 	close($fh);
 }
-
-print "Compiling library resources...\n";
-
-mkdir("build") if (!-d "build");
-system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
