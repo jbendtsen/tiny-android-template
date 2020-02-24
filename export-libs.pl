@@ -45,6 +45,38 @@ sub level_delta {
 	return $delta;
 }
 
+# The purpose of this function is self-explanatory, but I'm not sure if this is a particularly good way of going about it.
+# The reason I converted this into a hash tree instead of a single hash was to potentially reduce lookup times,
+#  but it seems to only be about 15% faster...
+sub value_exists {
+	my $root = shift;
+	my $dir  = shift;
+	my $type = shift;
+	my $name = shift;
+
+	if (exists($root->{$dir})) {
+		my $dir_hash = $root->{$dir};
+		if (exists($dir_hash->{$type})) {
+			my $type_hash = $dir_hash->{$type};
+			if (exists($type_hash->{$name})) {
+				return 1;
+			}
+			else {
+				$type_hash->{$name} = 1;
+				# $values_hash{$name} = "$pkg_name:$line_no$value";
+			}
+		}
+		else {
+			$dir_hash->{$type} = {};
+		}
+	}
+	else {
+		$root->{$dir} = {};
+	}
+
+	return 0;
+}
+
 if (!-d "lib") {
 	print(
 		"lib/ folder has not been created.\n",
@@ -65,7 +97,7 @@ if (-d "$LIB_CLASS_DIR") {
 	mkdir("$LIB_CLASS_DIR");
 }
 
-print "Extracting library resources and classes...\n";
+print("Extracting library resources and classes...\n");
 
 # A JAR is basically just a ZIP file packed with classes in a certain folder structure, so we just extract everything.
 foreach (<lib/*.jar>) {
@@ -86,7 +118,7 @@ foreach (<lib/*.aar>) {
 	rename("$LIB_RES_DIR/res", "$LIB_RES_DIR/res_$name") if (-d "$LIB_RES_DIR/res");
 }
 
-print "Merging library resources...\n";
+print("Merging library resources...\n");
 
 # This is the interesting part.
 # In order for the libraries to be loaded and work during run-time, all resources have to co-exist in the same space.
@@ -167,19 +199,10 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 				# If this tag has a 'name' attribute and we're only one level down from the root
 				if ($level == 1 and $line =~ /<(\w+) .*name="([^"]+)/) {
 					# Check this name for this resource type under this type sub-folder
-					$name = "$2:$1:$dir";
-
-					if (!exists($values_hash{$name})) {
-						my $value = ($line =~ />([^<]+)</) ? " $1" : "";
-
-						$values_hash{$name} = "$pkg_name:$line_no$value";
-						$new = 1;
+					if (value_exists(\%values_hash, $dir, $1, $2)) {
+						print("Eliminating re-def in $pkg_name at line $line_no for $dir/$1/$2\n");
+						$xml[$line_no - 1] = "";
 					}
-				}
-
-				if (!$new and $name) {
-					print "Eliminating re-def in $pkg_name at line $line_no for $name = '${values_hash{$name}}'\n";
-					$xml[$line_no - 1] = "";
 				}
 
 				$level += level_delta($line);
@@ -191,7 +214,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 	}
 }
 
-print "Writing values XMLs...\n";
+print("Writing values XMLs...\n");
 
 foreach (keys %xml_hash) {
 	# We make sure to add a single set of headers/footer at the end.
