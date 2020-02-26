@@ -23,7 +23,7 @@ FIND="/usr/bin/find"
 
 if [ ! -d "build" ]; then
 	echo Build directory not found.
-	echo proj-compile-res.sh needs to be run before this script.
+	echo link.pl needs to be run before this script.
 	exit
 fi
 
