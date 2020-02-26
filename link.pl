@@ -82,8 +82,15 @@ sub get_package_from_manifest {
 sub gen_proj_rtxt {
 	my @r_txt = ();
 	my $type_idx = 0;
+
+	# The meaning of "id" here is a type, not a number that is used to identify a resource
+	# We create a separate array and push it to the main r_txt at the end to work around the limitations of our gen_rjava() implementation.
+	my @layout_id_defs = ();
+
 	foreach my $dir (<res/*>) {
 		my $sub_idx = 0;
+
+		# If this type-folder is a values folder
 		if ($dir =~ /values/) {
 			foreach my $f (<$dir/*.xml>) {
 				open(my $fh, '<', $f);
@@ -91,8 +98,8 @@ sub gen_proj_rtxt {
 					if ($_ =~ /<(\w+).+name="([^"]+)"/) {
 						my $id = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
 						push(@r_txt, "int $1 $2 $id");
+						$sub_idx++;
 					}
-					$sub_idx++;
 				}
 				close($fh);
 			}
@@ -103,6 +110,19 @@ sub gen_proj_rtxt {
 			my $len = length($dir) + 1;
 
 			foreach my $f (<$dir/*>) {
+				# Some XML files (especially layout files) contain resource definitions under the type "id"
+				if (substr($f, -4) eq ".xml") {
+					open(my $fh, '<', $f);
+					foreach (<$fh>) {
+						if ($_ =~ /@\+id\/([^"]+)/) {
+							my $id = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
+							push(@layout_id_defs, "int id $1 $id");
+							$sub_idx++;
+						}
+					}
+					close($fh);
+				}
+
 				my $dot_idx = index($f, ".", $len);
 				my $name = ($dot_idx < 0) ? substr($f, $len) : substr($f, $len, $dot_idx - $len);
 
@@ -114,6 +134,8 @@ sub gen_proj_rtxt {
 
 		$type_idx++;
 	}
+
+	push(@r_txt, @layout_id_defs);
 
 	open(my $fh, '>', "build/R.txt");
 	print $fh join("\n", @r_txt);

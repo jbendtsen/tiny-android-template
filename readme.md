@@ -30,6 +30,8 @@ Does Not Require:
 
 In chronological order:
 
+- `kotlin-pre.sh`
+	- Prepares a copy of the Kotlin standard library in DEX form
 - `get-packages.sh`
 	- Retrieves library packages from Google's Maven repository. Targets AndroidX artifacts.
 - `export-libs.pl`
@@ -53,24 +55,27 @@ To download the SDK packages, append the name of the zip archive to https://dl.g
 
 ## Usage
 
-1) Get library packages
+1) Prepare the Kotlin standard library *Only necessary for Kotlin projects*
+- `./kotlin-pre.sh`
+
+2) Get library packages
 - `./get-packages.sh pkg-list.txt`
 
-2) Unpack & merge libraries
+3) Unpack & merge libraries
 - `./export-libs.pl`
 
-3) Build libraries
+4) Build libraries
 - `./link.pl`
 
-4) Create APK (you will need a KeyStore file for this. See "Notes" for details.)
+5) Create APK (you will need a KeyStore file for this. See "Notes" for details.)
 - `./make.sh`
 
-5) Install and run the app on a real device using ADB
+6) Install and run the app on a real device using ADB
 - `./run.sh`
 
-If your list of libraries change, go to step 2.
+If your list of libraries change, go to step 3.
 
-If you create or delete (or possibly rename) any resources, go to step 3.
+If you create or delete (or possibly rename) any resources, go to step 4.
 
 Otherwise, simply running make.sh should be enough to ensure that you have a fresh build.
 
@@ -82,6 +87,8 @@ To compile the Java version, simply rename the `src` folder to something else an
 As long as your JDK version can target Java 8, this should work. Tested with OpenJDK 13.0.2.
 
 You will need to make sure the "bin" directories for the JDK and for 7-Zip (and the Kotlin compiler if you're using Kotlin) are in the $PATH variable.
+
+You may need to change some configuration variables found at the top of each script. `kotlin-pre.sh` in particular relies on a hard-coded path which is system dependent.
 
 In order to build the APK, `apksigner` needs a KeyStore file. This can be generated with `keytool`, which comes with the JDK.
 
