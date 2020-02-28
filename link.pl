@@ -10,6 +10,8 @@ my $SDK_DIR      = "../Sdk";
 my $TOOLS_DIR    = "$SDK_DIR/build-tools/$BUILD_VER";
 my $PLATFORM_DIR = "$SDK_DIR/platforms/$ANDROID_VER";
 
+my $D8 = "java -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8";
+
 my $LIB_RES_DIR   = "lib/res";
 my $LIB_CLASS_DIR = "lib/classes";
 
@@ -265,7 +267,10 @@ sub update_res_ids {
 #  placing the resulting .class files inside the already extracted classes folder for the current package.
 # This means when the library is properly compiled into a JAR later, it knows how to access its own resources.
 
-sub compile_libs {
+sub gen_libs_rjava {
+	my $dir = "$LIB_RES_DIR/r_java";
+	my @rjava_list = ();
+
 	foreach (<lib/*.aar>) {
 		my $name = substr($_, 4, -4);
 
@@ -281,25 +286,31 @@ sub compile_libs {
 		close($fh);
 
 		# skip this library if the resources index is empty
-		next if (@r_txt <= 1);
+		if (@r_txt <= 0) {
+			print("R.txt for $name is missing, skipping...\n");
+			next;
+		}
 
 		my $package = get_package_from_manifest("$LIB_RES_DIR/${name}_mf.xml");
-		next if (!defined($package)); # a bit harsh ;)
+		if (!defined($package)) { # a bit harsh ;)
+			print("Could not find package name inside ${name}/AndroidManifest.xml, skipping...\n");
+			next;
+		}
 
-		my $out_ref = gen_rjava($package, \@r_txt);
+		my $out_path = "$dir/$name";
+		mkdir($out_path) if (!-d $out_path);
 
-		$package =~ s/\./\//g;
-		my $out_path = "$LIB_CLASS_DIR/$package";
-		mkdir $out_path if (!-d $out_path);
+		my $r_java = gen_rjava($package, \@r_txt);
 
 		$out_path .= "/R.java";
-		open($fh, '>', $out_path);
-		print $fh join("\n", @$out_ref);
-		close($fh);
+		push(@rjava_list, $out_path);
 
-		system("javac -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar '$out_path'");
-		unlink($out_path);
+		open($fh, '>', $out_path);
+		print $fh join("\n", @$r_java);
+		close($fh);
 	}
+
+	return \@rjava_list;
 }
 
 # Entry-point
@@ -316,10 +327,12 @@ print("Compiling library resources...\n");
 
 mkdir("build") if (!-d "build");
 system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
+exit if ($? != 0);
 
 print("Compiling project resources...\n");
 
 system("$TOOLS_DIR/aapt2 compile -o build/res.zip --dir res");
+exit if ($? != 0);
 
 print("Linking resources...\n");
 
@@ -332,8 +345,7 @@ open(my $fh, '<', "ids.txt");
 chomp(my @ids = <$fh>);
 close($fh);
 
-# for whatever reason, this doesn't work on my Cygwin setup
-unlink("ids.txt");
+system("rm ids.txt");
 
 print("Generating project R.txt...\n");
 
@@ -347,14 +359,37 @@ push(@r_list, <$LIB_RES_DIR/*_R.txt>);
 update_res_ids(\@ids, \@r_list);
 
 if (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR) {
-	print("Generating library resource maps and compiling libraries...\n");
-	compile_libs();
+	print("Generating library resource maps...\n");
+	mkdir("$LIB_RES_DIR/r_java") if (!-d "$LIB_RES_DIR/r_java");
+	my $rjava_list = gen_libs_rjava();
+
+	open(my $fh, '>', "rjava_list.txt");
+	print $fh join("\n", @$rjava_list);
+	close($fh);
+
+	print("Compiling resource maps...\n");
+	mkdir("$LIB_RES_DIR/R") if (!-d "$LIB_RES_DIR/R");
+
+	system("javac -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar -d $LIB_RES_DIR/R \@rjava_list.txt");
+	exit if ($? != 0);
+	unlink("rjava_list.txt");
+
+	system("jar --create --file build/libs_r.jar -C '$LIB_RES_DIR/R' .");
+	exit if ($? != 0);
+
+	print("Compiling resource maps into DEX bytecode...\n");
+	system("$D8 --intermediate build/libs_r.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	exit if ($? != 0);
+	rename("build/classes.dex", "build/libs_r.dex");
 
 	print("Fusing library classes into a .JAR...\n");
 	system("jar --create --file build/libs.jar -C '$LIB_CLASS_DIR' .");
+	exit if ($? != 0);
 
 	print("Compiling library .JAR into DEX bytecode...\n");
-	system("java -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8 --intermediate build/libs.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	system("$D8 --intermediate build/libs.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	exit if ($? != 0);
+	rename("build/classes.dex", "build/libs.dex");
 }
 
 print("Generating project R.java...\n");
@@ -375,5 +410,8 @@ close($fh);
 print("Compiling project R.java...\n");
 
 mkdir("build/R") if (!-d "build/R");
+
 system("javac -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar build/R.java -d build/R");
+exit if ($? != 0);
+
 system("jar --create --file build/R.jar -C build/R .");

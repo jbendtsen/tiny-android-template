@@ -56,7 +56,7 @@ fi
 
 echo Compiling classes into DEX bytecode...
 
-dex_list="build/classes.dex"
+dex_list="build/libs.dex build/libs_r.dex"
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
 java -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/com/example/test/* || exit
 

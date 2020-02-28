@@ -15,6 +15,7 @@ customview 1.0.0
 dynamicanimation 1.0.0
 fragment 1.2.1
 gridlayout 1.0.0
+https://repo1.maven.org/maven2/com/google/guava/guava/28.2-android/guava-28.2-android.jar
 heifwriter 1.0.0
 interpolator 1.0.0
 androidx.lifecycle:lifecycle-common-java8:2.2.0

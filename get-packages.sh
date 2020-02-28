@@ -32,7 +32,20 @@ get_naive() {
 }
 
 parse_then_get() {
-	if [[ "$1" =~ ':' ]]; then
+	if [[ "$1" =~ '//' ]]; then
+		IFS='/'
+		read -ra tokens <<< "$1"
+		fname="${tokens[-1]}"
+		IFS=' '
+
+		echo -n "$fname: "
+		curl -s -f "$1" -o "$OUTPUT_DIR/$fname"
+		if [ $? -eq 0 ]; then
+			echo OK
+		else
+			echo "ERROR ($?)"
+		fi
+	elif [[ "$1" =~ ':' ]]; then
 		IFS=':'
 		arg=( $1 )
 		IFS=' '
