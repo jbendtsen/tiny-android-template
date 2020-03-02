@@ -3,19 +3,17 @@
 # Naive package downloader for the Jetpack/AndroidX suite
 # Check out https://developer.android.com/jetpack/androidx/versions for a list of packages and versions
 
-REPO="https://dl.google.com/dl/android/maven2"
-
-OUTPUT_DIR="lib"
+source includes.sh
 
 get() {
 	fname="$2.aar"
 	echo -n "$2: "
-	curl -s -f "$REPO/$1/$fname" -o "$OUTPUT_DIR/$fname"
+	$CMD_CURL -s -f "$REPO/$1/$fname" -o "$PKG_OUTPUT/$fname"
 	if [ $? -eq 0 ]; then
 		echo OK
 	else
 		fname="$2.jar"
-		curl -s -f "$REPO/$1/$fname" -o "$OUTPUT_DIR/$fname"
+		$CMD_CURL -s -f "$REPO/$1/$fname" -o "$PKG_OUTPUT/$fname"
 
 		if [ $? -eq 0 ]; then
 			echo OK
@@ -39,7 +37,7 @@ parse_then_get() {
 		IFS=' '
 
 		echo -n "$fname: "
-		curl -s -f "$1" -o "$OUTPUT_DIR/$fname"
+		$CMD_CURL -s -f "$1" -o "$PKG_OUTPUT/$fname"
 		if [ $? -eq 0 ]; then
 			echo OK
 		else
@@ -50,7 +48,7 @@ parse_then_get() {
 		arg=( $1 )
 		IFS=' '
 
-		prefix=`echo ${arg[0]} | tr '.' '/'`
+		prefix=${arg[0]//\./\/}
 		path="$prefix/${arg[1]}/${arg[2]}"
 		name="${arg[1]}-${arg[2]}"
 		get $path $name
@@ -72,7 +70,7 @@ if [ $# -lt 1 ]; then
 	exit
 fi
 
-[ ! -d "$OUTPUT_DIR" ] && mkdir -p "$OUTPUT_DIR"
+[ ! -d "$PKG_OUTPUT" ] && mkdir -p "$PKG_OUTPUT"
 
 if [ $# -eq 2 ]; then
 	get_naive $1 $2
@@ -83,7 +81,7 @@ if [[ "$1" =~ ':' ]]; then
 	parse_then_get $1
 else
 	# Take out those pesky carriage returns
-	list=`sed "s/\r//" $1`
+	list=`$CMD_SED "s/\r//" $1`
 
 	while IFS= read -r line; do
 		parse_then_get $line

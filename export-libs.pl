@@ -3,15 +3,12 @@
 use strict;
 use warnings;
 
-my $ANDROID_VER = "android-29";
-my $BUILD_VER   = "29.0.3";
-
-my $SDK_DIR      = "../Sdk";
-my $TOOLS_DIR    = "$SDK_DIR/build-tools/$BUILD_VER";
-my $PLATFORM_DIR = "$SDK_DIR/platforms/$ANDROID_VER";
-
 my $LIB_RES_DIR   = "lib/res";
 my $LIB_CLASS_DIR = "lib/classes";
+
+my $CMD_DELETE = "rm -rf";
+my $CMD_COPY   = "cp -r";
+my $CMD_7Z     = "7z";
 
 # I make the assumption that all tags that don't directly belong to the <resources> tag can be ignored when looking for merge conflicts.
 # This is a helper function that keeps track of how many tag levels deep the interpreter is.
@@ -87,13 +84,13 @@ if (!-d "lib") {
 
 if (-d "$LIB_RES_DIR") {
 	print("Clearing old library resources...\n");
-	exit if (system("rm -rf $LIB_RES_DIR") != 0);
+	exit if (system("$CMD_DELETE $LIB_RES_DIR") != 0);
 	mkdir("$LIB_RES_DIR");
 }
 
 if (-d "$LIB_CLASS_DIR") {
 	print("Clearing old library classes...\n");
-	exit if (system("rm -rf $LIB_CLASS_DIR") != 0);
+	exit if (system("$CMD_DELETE $LIB_CLASS_DIR") != 0);
 	mkdir("$LIB_CLASS_DIR");
 }
 
@@ -101,14 +98,14 @@ print("Extracting library resources and classes...\n");
 
 # A JAR is basically just a ZIP file packed with classes in a certain folder structure, so we just extract everything.
 foreach (<lib/*.jar>) {
-	system("7z x -y '$_' -o$LIB_CLASS_DIR > /dev/null");
+	system("$CMD_7Z x -y '$_' -o$LIB_CLASS_DIR > /dev/null");
 }
 
 # AAR is the Android library format. It's essentially a ZIP containing a JAR and some resources.
 foreach (<lib/*.aar>) {
-	system("7z x -y '$_' -o$LIB_RES_DIR res classes.jar R.txt AndroidManifest.xml > /dev/null");
+	system("$CMD_7Z x -y '$_' -o$LIB_RES_DIR res classes.jar R.txt AndroidManifest.xml > /dev/null");
 
-	system("7z x -y '$LIB_RES_DIR/classes.jar' -o$LIB_CLASS_DIR > /dev/null");
+	system("$CMD_7Z x -y '$LIB_RES_DIR/classes.jar' -o$LIB_CLASS_DIR > /dev/null");
 	unlink("$LIB_RES_DIR/classes.jar");
 
 	my $name = substr($_, 4, -4);
@@ -140,7 +137,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 	foreach my $type_dir (<$pkg/*>) {
 		# For non-"values" directories, just merge them into the new res folder
 		if ($type_dir !~ /\/values/) {
-			system("cp -r '$type_dir' $LIB_RES_DIR/res");
+			system("$CMD_COPY -r '$type_dir' $LIB_RES_DIR/res");
 			next;
 		}
 

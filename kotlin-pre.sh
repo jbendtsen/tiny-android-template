@@ -1,17 +1,9 @@
 #!/bin/bash
 
-# You will definitely need to change this variable
-KOTLIN_LIB_DIR="C:/Program Files/kotlinc/lib"
+source includes.sh
 
-ANDROID_VER="android-29"
-BUILD_VER="29.0.3"
+[ ! -d "build" ] && $CMD_MKDIR "build"
 
-SDK_DIR="../Sdk"
-TOOLS_DIR="$SDK_DIR/build-tools/$BUILD_VER"
-PLATFORM_DIR="$SDK_DIR/platforms/$ANDROID_VER"
+$CMD_D8 --intermediate "$KOTLIN_LIB_DIR/kotlin-stdlib.jar" --classpath $PLATFORM_DIR/android.jar --output build || exit
 
-[ ! -d "build" ] && mkdir "build"
-
-java -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8 --intermediate "$KOTLIN_LIB_DIR/kotlin-stdlib.jar" --classpath $PLATFORM_DIR/android.jar --output build || exit
-
-mv "build/classes.dex" "build/kotlin.dex"
+$CMD_RENAME "build/classes.dex" "build/kotlin.dex"

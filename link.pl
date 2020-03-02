@@ -10,7 +10,11 @@ my $SDK_DIR      = "../Sdk";
 my $TOOLS_DIR    = "$SDK_DIR/build-tools/$BUILD_VER";
 my $PLATFORM_DIR = "$SDK_DIR/platforms/$ANDROID_VER";
 
-my $D8 = "java -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8";
+my $CMD_DELETE = "rm -rf";
+my $CMD_JAR    = "jar";
+my $CMD_JAVAC  = "javac";
+my $CMD_JAVA   = "java";
+my $CMD_D8     = "$CMD_JAVA -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8";
 
 my $LIB_RES_DIR   = "lib/res";
 my $LIB_CLASS_DIR = "lib/classes";
@@ -345,7 +349,7 @@ open(my $fh, '<', "ids.txt");
 chomp(my @ids = <$fh>);
 close($fh);
 
-system("rm ids.txt");
+system("$CMD_DELETE ids.txt");
 
 print("Generating project R.txt...\n");
 
@@ -370,24 +374,24 @@ if (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR) {
 	print("Compiling resource maps...\n");
 	mkdir("$LIB_RES_DIR/R") if (!-d "$LIB_RES_DIR/R");
 
-	system("javac -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar -d $LIB_RES_DIR/R \@rjava_list.txt");
+	system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar -d $LIB_RES_DIR/R \@rjava_list.txt");
 	exit if ($? != 0);
 	unlink("rjava_list.txt");
 
-	system("jar --create --file build/libs_r.jar -C '$LIB_RES_DIR/R' .");
+	system("$CMD_JAR --create --file build/libs_r.jar -C '$LIB_RES_DIR/R' .");
 	exit if ($? != 0);
 
 	print("Compiling resource maps into DEX bytecode...\n");
-	system("$D8 --intermediate build/libs_r.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	system("$CMD_D8 --intermediate build/libs_r.jar --classpath $PLATFORM_DIR/android.jar --output build");
 	exit if ($? != 0);
 	rename("build/classes.dex", "build/libs_r.dex");
 
 	print("Fusing library classes into a .JAR...\n");
-	system("jar --create --file build/libs.jar -C '$LIB_CLASS_DIR' .");
+	system("$CMD_JAR --create --file build/libs.jar -C '$LIB_CLASS_DIR' .");
 	exit if ($? != 0);
 
 	print("Compiling library .JAR into DEX bytecode...\n");
-	system("$D8 --intermediate build/libs.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	system("$CMD_D8 --intermediate build/libs.jar --classpath $PLATFORM_DIR/android.jar --output build");
 	exit if ($? != 0);
 	rename("build/classes.dex", "build/libs.dex");
 }
@@ -411,7 +415,7 @@ print("Compiling project R.java...\n");
 
 mkdir("build/R") if (!-d "build/R");
 
-system("javac -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar build/R.java -d build/R");
+system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar build/R.java -d build/R");
 exit if ($? != 0);
 
-system("jar --create --file build/R.jar -C build/R .");
+system("$CMD_JAR --create --file build/R.jar -C build/R .");
