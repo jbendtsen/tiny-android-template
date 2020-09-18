@@ -3,12 +3,9 @@
 use strict;
 use warnings;
 
-my $ANDROID_VER = "android-29";
-my $BUILD_VER   = "29.0.3";
-
 my $SDK_DIR      = "../Sdk";
-my $TOOLS_DIR    = "$SDK_DIR/build-tools/$BUILD_VER";
-my $PLATFORM_DIR = "$SDK_DIR/platforms/$ANDROID_VER";
+my $TOOLS_DIR    = "$SDK_DIR/android-11";
+my $PLATFORM_DIR = "$SDK_DIR/android-11";
 
 my $CMD_DELETE = "rm -rf";
 my $CMD_JAR    = "jar";
@@ -150,7 +147,7 @@ sub gen_proj_rtxt {
 
 # This is the big one. This is where all resource IDs get overwritten.
 # When AAPT2 links all resources from all the libraries (and the main project) together, it reallocates all IDs so that they are unique.
-# We take the new list of IDs and apply it to the each package's resource listing, which AAPT2 doesn't do for us.
+# We take the new list of IDs and apply it to each package's resource listing, which AAPT2 doesn't do for us.
 # After this, there should be no resource collisions at app runtime.
 
 sub update_res_ids {
@@ -176,8 +173,7 @@ sub update_res_ids {
 	}
 	push(@table, $size);
 
-	# Make a copy of each R.txt and embed it into one homogenous string.
-	# This should make the regexes faster, since there won't be any additional cache misses or what have you
+	# Make a copy of each R.txt and embed it into one homogenous string. This is likely faster than scanning each file individually.
 	my $blob = pack($fmt, @files);
 
 	# Make an index of replacements to happen later. This means there (shouldn't) be any search-replace ordering issues.
@@ -419,3 +415,4 @@ system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar 
 exit if ($? != 0);
 
 system("$CMD_JAR --create --file build/R.jar -C build/R .");
+

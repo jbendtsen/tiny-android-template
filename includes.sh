@@ -1,18 +1,14 @@
 #!/bin/bash
 
+SDK_DIR="../Sdk"
+TOOLS_DIR="$SDK_DIR/android-11"
+PLATFORM_DIR="$SDK_DIR/android-11"
+
+KOTLIN_LIB_DIR="/usr/share/kotlin/lib"
+
 REPO="https://dl.google.com/dl/android/maven2"
 
 PKG_OUTPUT="lib"
-
-# You will almost certainly need to change this variable
-KOTLIN_LIB_DIR="/usr/share/kotlin/lib"
-
-ANDROID_VER="android-29"
-BUILD_VER="29.0.3"
-
-SDK_DIR="../Sdk"
-TOOLS_DIR="$SDK_DIR/build-tools/$BUILD_VER"
-PLATFORM_DIR="$SDK_DIR/platforms/$ANDROID_VER"
 
 JAR_TOOLS="java -Xmx1024M -Xss1m -jar $TOOLS_DIR/lib"
 
