@@ -50,7 +50,6 @@ To download the SDK packages, append the name of the zip archive to https://dl.g
 4) Build libraries
 - `./link.pl`
 	- Links all resources, fixes library resource references and compiles library classes into DEX bytecode. Most of the work for creating the app is done here. The Android VM has an *interesting* method of locating and making use of resources; this script prepares project & library code and resources to match the expected layout/format.
-	- Note: there will likely be many warnings, however they won't affect whether the app will run or not. Android Studio ignores these warnings.
 
 5) Create APK (you will need a KeyStore file for this. See **"Notes"** for details.)
 - `./make.sh`
@@ -87,6 +86,9 @@ To compile the Java version, simply rename the `src` folder to something else an
 Other examples include KeyStore password, Android SDK location and version, etc.
 Most of these variables can be found in `make.sh`, `includes.sh` and `link.pl`.
 
+If you're getting `attribute <thing> (aka <package>:<thing>) not found` errors in `link.pl`, try adding `<thing>` to `@DELETE_LIST` at the top of `export-libs.pl`.
+This will ensure that any attributes that can't be defined without a library you don't have (eg. a support library) are (temporarily) deleted before linking library resources.
+
 As long as your JDK version can target Java 8, this should work. Tested with OpenJDK 13.0.2.
 
 You will need to make sure the "bin" directories for the JDK and for 7-Zip (and the Kotlin compiler if you're using Kotlin) are in the $PATH variable.
@@ -97,6 +99,10 @@ The following command generates a KeyStore file (keystore.jks) which is valid fo
 `keytool -genkeypair -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000`
 
 These scripts use the `d8` tool from the Android SDK (as opposed to `dx`). Thus, your build-tools version must be >= 28.0.1.
+
+To delete the library cache in your project, simply delete the `lib` folder that was created, then run `get-packages.sh` again.
+
+If you're using Linux/OS X/etc. and you're getting a `permission denied`-esque error, try using `chmod +x` on the `.sh` and `.pl` files in this repo.
 
 This template is based off https://github.com/authmane512/android-project-template
 

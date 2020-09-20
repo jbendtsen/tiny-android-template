@@ -35,7 +35,7 @@ kt_list=`$CMD_FIND src -name "*.kt"`
 # I picked '2' in case newlines bump it up from 0, though it's likely overkill
 found_src=0
 if [ ${#java_list} -gt 2 ]; then
-	$CMD_JAVAC -source 8 -target 8 -classpath "build/R.jar${SEP}build/libs.jar" -bootclasspath $PLATFORM_DIR/android.jar -d build $java_list || exit
+	$CMD_JAVAC -source 11 -target 11 -classpath "build/R.jar${SEP}build/libs.jar${SEP}$PLATFORM_DIR/android.jar" -d build $java_list || exit
 	found_src=1
 fi
 if [ ${#kt_list} -gt 2 ]; then

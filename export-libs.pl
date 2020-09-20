@@ -3,6 +3,10 @@
 use strict;
 use warnings;
 
+my @DELETE_LIST = (
+	qr/app:layout_behavior="[^"^`]*"/
+);
+
 my $LIB_RES_DIR   = "lib/res";
 my $LIB_CLASS_DIR = "lib/classes";
 
@@ -128,6 +132,8 @@ mkdir("$LIB_RES_DIR/res");
 my %xml_hash;
 my %values_hash;
 
+my $n_delete_items = scalar @DELETE_LIST;
+
 # For each package (=library)
 foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 	# 12 == length of "$LIB_RES_DIR/res_"
@@ -135,16 +141,39 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 
 	# The resources' sub-folders represent resource "types". The ones we'll focus on here are the "values*" types.
 	foreach my $type_dir (<$pkg/*>) {
-		# For non-"values" directories, just merge them into the new res folder
-		if ($type_dir !~ /\/values/) {
-			system("$CMD_COPY -r '$type_dir' $LIB_RES_DIR/res");
-			next;
-		}
-
 		# Get the name of the current folder
 		my $dir = substr($type_dir, length($pkg) + 1);
 		# Mirror this folder name in the output
 		my $out_dir = "$LIB_RES_DIR/res/$dir";
+
+		# Non-"values" directories
+		if ($type_dir !~ /\/values/) {
+			if ($n_delete_items > 0) {
+				mkdir $out_dir if (!-d $out_dir);
+
+				foreach my $fname (<$type_dir/*>) {
+					open(my $fh, '<', $fname);
+					read($fh, my $content, -s $fh);
+					close($fh);
+
+					foreach my $r (@DELETE_LIST) {
+						$content =~ s/$r//g;
+					}
+
+					my $xml_name = substr($fname, length($type_dir) + 1);
+					my $out_xml = "$out_dir/$xml_name";
+
+					open($fh, '>', $out_xml);
+					print $fh $content;
+					close($fh);
+				}
+			}
+			else {
+				system("$CMD_COPY -r '$type_dir' $LIB_RES_DIR/res");
+			}
+			next;
+		}
+
 		mkdir $out_dir if (!-d $out_dir);
 
 		# For each xml
@@ -216,11 +245,16 @@ print("Writing values XMLs...\n");
 foreach (keys %xml_hash) {
 	# We make sure to add a single set of headers/footer at the end.
 	# Note that unshift() makes the new element come first on the list.
-	unshift(@{$xml_hash{$_}}, '<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">');
+	unshift(@{$xml_hash{$_}}, '<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2" xmlns:ns2="http://schemas.android.com/tools">');
 	unshift(@{$xml_hash{$_}}, '<?xml version="1.0" encoding="utf-8"?>');
 	push(@{$xml_hash{$_}}, '</resources>');
 
+	my $content = join("\n", @{$xml_hash{$_}});
+	foreach my $r (@DELETE_LIST) {
+		$content =~ s/$r//g;
+	}
+
 	open(my $fh, '>', $_);
-	print $fh join("\n", @{$xml_hash{$_}});
+	print $fh $content;
 	close($fh);
 }
