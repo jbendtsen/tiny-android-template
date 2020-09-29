@@ -26,6 +26,19 @@ echo Cleaning build...
 # Deletes all folders and APK files inside the build folder
 $CMD_DELETE build/*.apk build/*/ 2> /dev/null
 
+MF=`cat AndroidManifest.xml`
+TERM="package=[\'\"]([a-z0-9.]+)"
+package_path=""
+
+if [[ "$MF" =~ $TERM ]]
+then
+	package="${BASH_REMATCH[1]}"
+	package_path=${package//\./\/}
+else
+	echo Could not find a suitable package name inside AndroidManifest.xml
+	exit
+fi
+
 echo Compiling project source...
 
 java_list=`$CMD_FIND src -name "*.java"`
@@ -52,7 +65,7 @@ echo Compiling classes into DEX bytecode...
 
 dex_list="build/libs.dex build/libs_r.dex"
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
-$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/com/example/test/* || exit
+$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/$package_path/* || exit
 
 echo Creating APK...
 
