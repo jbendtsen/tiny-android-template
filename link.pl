@@ -36,6 +36,8 @@ sub gen_rjava {
 
 	foreach my $line (@$r_txt) {
 		my @info = split(/ /, $line, 4);
+		$info[1] =~ tr/-/_/;
+
 		if ($info[1] ne $class) {
 			push(@out, "\t}") if (length($class) > 0);
 
