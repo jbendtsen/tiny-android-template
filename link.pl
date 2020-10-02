@@ -36,7 +36,12 @@ sub gen_rjava {
 
 	foreach my $line (@$r_txt) {
 		my @info = split(/ /, $line, 4);
-		$info[1] =~ tr/-/_/;
+		$info[1] =~ s/[^0-9a-zA-Z]/_/;
+
+		my $colon = rindex($info[2], ':');
+		if ($colon >= 0) {
+			$info[2] = substr($info[2], $colon + 1);
+		}
 
 		if ($info[1] ne $class) {
 			push(@out, "\t}") if (length($class) > 0);
