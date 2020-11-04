@@ -105,7 +105,7 @@ sub gen_proj_rtxt {
 			foreach my $f (<$dir/*.xml>) {
 				open(my $fh, '<', $f);
 				foreach (<$fh>) {
-					if ($_ =~ /<(\w+).+name="([^"]+)"/) {
+					if ($_ =~ /<([^ ]+).+name="([^"]+)"/) {
 						my $id = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
 						push(@r_txt, "int $1 $2 $id");
 						$sub_idx++;
