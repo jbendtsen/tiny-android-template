@@ -48,7 +48,12 @@ kt_list=`$CMD_FIND src -name "*.kt"`
 # I picked '2' in case newlines bump it up from 0, though it's likely overkill
 found_src=0
 if [ ${#java_list} -gt 2 ]; then
-	$CMD_JAVAC -source 11 -target 11 -classpath "build/R.jar${SEP}build/libs.jar${SEP}$PLATFORM_DIR/android.jar" -d build $java_list || exit
+	jars=""
+	[ -f "build/R.jar" ] && jars+="build/R.jar${SEP}"
+	[ -f "build/libs.jar" ] && jars+="build/libs.jar${SEP}"
+	jars+="$PLATFORM_DIR/android.jar"
+
+	$CMD_JAVAC -source 11 -target 11 -classpath $jars -d build $java_list || exit
 	found_src=1
 fi
 if [ ${#kt_list} -gt 2 ]; then
@@ -63,7 +68,9 @@ fi
 
 echo Compiling classes into DEX bytecode...
 
-dex_list="build/libs.dex build/libs_r.dex"
+dex_list=""
+[ -f "build/libs.dex" ] && dex_list+=" build/libs.dex"
+[ -f "build/libs_r.dex" ] && dex_list+=" build/libs_r.dex"
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
 $CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/$package_path/* || exit
 

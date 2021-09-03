@@ -330,11 +330,18 @@ if (-d "lib" && not (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR)) {
 	exit;
 }
 
-print("Compiling library resources...\n");
-
 mkdir("build") if (!-d "build");
-system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
-exit if ($? != 0);
+
+my $aapt2_res = "build/res.zip";
+
+if (-d "lib") {
+	print("Compiling library resources...\n");
+
+	system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
+	exit if ($? != 0);
+
+	$aapt2_res = "build/res_libs.zip " . $aapt2_res;
+}
 
 print("Compiling project resources...\n");
 
@@ -344,7 +351,7 @@ exit if ($? != 0);
 print("Linking resources...\n");
 
 # This is what gives us the actual set of properly unique IDs
-system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt build/res.zip build/res_libs.zip");
+system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt $aapt2_res");
 exit if ($? != 0);
 
 # Load those unique IDs
