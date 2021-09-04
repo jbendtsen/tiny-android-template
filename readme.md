@@ -19,7 +19,7 @@ Does Not Require:
 
 At the time of writing, https://dl.google.com/android/repository/repository2-1.xml contains a map of internal package links that form the Android SDK.
 As far as I know, the only required SDK packages for compilation are `build-tools_<version>-<os>.zip` and `platform_<version>.zip`.
-For running the app remotely, you'll find **ADB** inside `platform-tools_<version>-<os>.zip`.
+For running the app remotely, you'll find `adb` inside `platform-tools_<version>-<os>.zip`.
 To download the SDK packages, append the name of the zip archive to https://dl.google.com/android/repository/
 (you'll find the package file names within the `<url>` tags of that repository.xml file)
 
@@ -33,17 +33,23 @@ To download the SDK packages, append the name of the zip archive to https://dl.g
 
 4) Check the variables at the top of the `includes.sh` and `link.pl` files. Edit them to match the names of the folders that were just extracted.
 
+## Selecting a template
+
+This repository offers two templates: vanilla (which has no dependencies) and AndroidX.
+- To use the vanilla version, rename `res-vanilla` to `res` and rename `src-vanilla` to `src`.
+- To use the AndroidX version, rename `res-androidx` to `res` and rename either `src-kt` or `src-java` to `src`.
+
 ## Usage
 
 1) Prepare the Kotlin standard library *Only necessary for Kotlin projects*
 - `./kotlin-pre.sh`
 	- This will prepare a copy of the Kotlin standard library for your project in DEX form, which is required for a Kotlin app on Android.
 
-2) Get library packages
+2) Get library packages *Only necessary if there are dependencies*
 - `./get-packages.sh pkg-list.txt`
 	- This will retrieve AndroidX library packages from Google's Maven repository. The included `pkg-list.txt` contains the list of packages required for "Hello World".
 
-3) Unpack & merge libraries
+3) Unpack & merge libraries *Only necessary if there are dependencies*
 - `./export-libs.pl`
 	- Combines and compiles library resources while resolving resource name merge conflicts. Essentially, your code and the libraries/packages you use have resources which effectively must share the same namespace. This script is the first step in the merging process.
 
@@ -70,11 +76,9 @@ To compile the Java version, simply rename the `src` folder to something else an
 
 ## Project Contents
 
-- `res/layout/activity_main.xml`
-	- UI mark-up
-- `res/values/strings.xml`
-	- Externalised strings
-- `src/MainActivity.kt` OR `src-java/MainActivity.java`
+- `res` OR `res-vanilla`
+	- UI layout, strings, etc.
+- `src-kt/MainActivity.kt` OR `src-java/MainActivity.java` OR `src-vanilla/MainActivity.java`
 	- The actual program
 - `AndroidManifest.xml`
 	- Header for the app
