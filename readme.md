@@ -17,11 +17,12 @@ Does Not Require:
 
 ## Getting the Android SDK
 
-At the time of writing, https://dl.google.com/android/repository/repository2-1.xml contains a map of internal package links that form the Android SDK.
-As far as I know, the only required SDK packages for compilation are `build-tools_<version>-<os>.zip` and `platform_<version>.zip`.
+At the time of writing, [https://dl.google.com/android/repository/repository2-1.xml] contains a list of links to packages that form the Android SDK.
+The only required SDK packages for compilation are `build-tools_<version>-<os>.zip` and `platform_<version>.zip`.
 For running the app remotely, you'll find `adb` inside `platform-tools_<version>-<os>.zip`.
-To download the SDK packages, append the name of the zip archive to https://dl.google.com/android/repository/
-(you'll find the package file names within the `<url>` tags of that repository.xml file)
+
+To download the SDK packages, run `sdk-package-list.py`, which will generate `sdk-package-list.html` with links to all SDK downloads.
+Alternatively, you can acquire packages manually by downloading the aforementioned xml file and append each package name to `https://dl.google.com/android/repository/`.
 
 ## Installing the Tools
 
