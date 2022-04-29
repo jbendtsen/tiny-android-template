@@ -2,14 +2,19 @@
 
 *For Android projects written in Kotlin and/or Java, using the latest AndroidX libraries*
 
-Requirements:
+The purpose of this template is to give people the ability to write Android apps without having to use Android Studio or the equally bloated Gradle.
+When I picked up Android dev for the first time, I was struck by how frustratingly slow and janky these tools were to use,
+and that they seemed to only run at an acceptable pace on machines designed for gaming.
+However, I still wanted to write apps for Android, so I developed this template so I could continue my work without having to use an IDE or external build system.
+
+### Requirements
 - Java Development Kit (JDK)
 - Kotlin Compiler ***(optional)***
 - Android SDK
 - 7-Zip
 - Bash & Perl (Cygwin/MSYS if on Windows)
 
-Does Not Require:
+### Does Not Require
 - Android Studio
 - Gradle
 - Apache Maven / Ant
