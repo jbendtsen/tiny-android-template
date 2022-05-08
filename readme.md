@@ -73,6 +73,7 @@ This repository offers two templates: vanilla (which has no dependencies) and An
 	- On Linux, if `run.sh` or `logs.sh` fail with `user <user> is not in the plugdev group`:
 		- Ensure the plugdev group is created with `groupadd plugdev`
 		- Ensure the current user is part of the plugdev group with `sudo usermod -a -G plugdev <user>`
+		- Try logging out and logging in again
 	- If instead you get the error `missing udev rules? user is in the plugdev group`:
 		- Try killing the adb process with `kill -9 $(pidof adb)`
 		- Try unplugging and plugging in your device again
