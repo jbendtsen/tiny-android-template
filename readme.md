@@ -2,7 +2,7 @@
 
 *For Android projects written in Kotlin and/or Java, using the latest AndroidX libraries*
 
-The purpose of this template is to give people the ability to write Android apps without having to use Android Studio or the equally bloated Gradle.
+The purpose of this template is to give people the ability to write Android apps without having to use Android Studio or Gradle.
 When I picked up Android dev for the first time, I was struck by how frustratingly slow and janky these tools were to use,
 and that they seemed to only run at an acceptable pace on machines designed for gaming.
 However, I still wanted to write apps for Android, so I developed this template so I could continue my work without having to use an IDE or external build system.
@@ -47,15 +47,15 @@ This repository offers two templates: vanilla (which has no dependencies) and An
 
 ## Usage
 
-1) Prepare the Kotlin standard library *Only necessary for Kotlin projects*
+1) Prepare the Kotlin standard library - *Only necessary for Kotlin projects*
 - `./kotlin-pre.sh`
 	- This will prepare a copy of the Kotlin standard library for your project in DEX form, which is required for a Kotlin app on Android.
 
-2) Get library packages *Only necessary if there are dependencies*
+2) Get library packages - *Only necessary if there are dependencies*
 - `./get-packages.sh pkg-list.txt`
 	- This will retrieve AndroidX library packages from Google's Maven repository. The included `pkg-list.txt` contains the list of packages required for "Hello World".
 
-3) Unpack & merge libraries *Only necessary if there are dependencies*
+3) Unpack & merge libraries - *Only necessary if there are dependencies*
 - `./export-libs.pl`
 	- Combines and compiles library resources while resolving resource name merge conflicts. Essentially, your code and the libraries/packages you use have resources which effectively must share the same namespace. This script is the first step in the merging process.
 
@@ -70,6 +70,13 @@ This repository offers two templates: vanilla (which has no dependencies) and An
 6) Install and run the app on a real device using ADB
 - `./run.sh`
 	- There is also a `logs.sh` script which dumps the ADB log to the console.
+	- On Linux, if `run.sh` or `logs.sh` fail with `user <user> is not in the plugdev group`:
+		- Ensure the plugdev group is created with `groupadd plugdev`
+		- Ensure the current user is part of the plugdev group with `sudo usermod -a -G plugdev <user>`
+	- If instead you get the error `missing udev rules? user is in the plugdev group`:
+		- Try killing the adb process with `kill -9 $(pidof adb)`
+		- Try unplugging and plugging in your device again
+		- Try adjusting the charging/USB options on your Android under the "Use USB for" section
 
 If your list of libraries change, go to step 3.
 
@@ -114,5 +121,5 @@ To delete the library cache in your project, simply delete the `lib` folder that
 
 If you're using Linux/OS X/etc. and you're getting a `permission denied`-esque error, try using `chmod +x` on the `.sh` and `.pl` files in this repo.
 
-This template is based off https://github.com/authmane512/android-project-template
+This template is loosely based off [https://github.com/authmane512/android-project-template]
 
