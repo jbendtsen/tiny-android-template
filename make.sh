@@ -12,9 +12,6 @@ SEP=":"
 OS=`uname -s`
 [[ $OS =~ "CYGWIN" || $OS =~ "MINGW" || $OS =~ "MSYS" ]] && SEP=";"
 
-KEYSTORE="keystore.jks"
-KS_PASS="123456"
-
 if [ ! -d "build" ]; then
 	echo Build directory not found.
 	echo link.pl needs to be run before this script.
@@ -72,7 +69,7 @@ dex_list=""
 [ -f "build/libs.dex" ] && dex_list+=" build/libs.dex"
 [ -f "build/libs_r.dex" ] && dex_list+=" build/libs_r.dex"
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
-$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/$package_path/* || exit
+$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/$package_path/*  --output build || exit
 
 echo Creating APK...
 
@@ -81,9 +78,16 @@ res="build/res.zip"
 $TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt $res || exit
 
 # Pack the DEX file into a new APK file
-$TOOLS_DIR/aapt add build/unaligned.apk classes.dex || exit
+cd build
+$CMD_7Z a -tzip unaligned.apk classes.dex > /dev/null
+cd ..
 
-$CMD_DELETE classes.dex
+for t in ${TARGET_ARCHES[@]}; do
+	if [ -d $t ]; then
+		$CMD_7Z a -tzip build/unaligned.apk $t > /dev/null
+		$CMD_7Z rn -tzip build/unaligned.apk $t lib/$t > /dev/null
+	fi
+done
 
 # Align the APK
 # I've seen the next step and this one be in the other order, but the Android reference site says it should be this way...

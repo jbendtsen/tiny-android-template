@@ -3,18 +3,38 @@
 use strict;
 use warnings;
 
-my $SDK_DIR      = "../Sdk";
-my $TOOLS_DIR    = "$SDK_DIR/android-11";
-my $PLATFORM_DIR = "$SDK_DIR/android-11";
+my $ANDROID_VERSION;
 
-my $CMD_DELETE = "rm -rf";
-my $CMD_JAR    = "jar";
-my $CMD_JAVAC  = "javac";
-my $CMD_JAVA   = "java";
-my $CMD_D8     = "$CMD_JAVA -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8";
+my $SDK_DIR;
+my $TOOLS_DIR;
+my $PLATFORM_DIR;
 
-my $LIB_RES_DIR   = "lib/res";
-my $LIB_CLASS_DIR = "lib/classes";
+my $CMD_DELETE;
+my $CMD_JAR;
+my $CMD_JAVAC;
+my $CMD_JAVA;
+my $CMD_D8;
+
+my $LIB_RES_DIR;
+my $LIB_CLASS_DIR;
+
+# get variables from includes.sh
+{
+	open(my $FILE, '<', "includes.sh");
+
+	foreach my $line (<$FILE>) {
+		if (length($line) < 2 or substr($line, 0, 1) eq '#') {
+			next;
+		}
+		my $decl = substr($line, 0, -1);
+		$decl =~ s/="/ = "/;
+		$decl =~ s/='/ = '/;
+		$decl = "\$" . $decl . ";\n";
+		eval($decl);
+	}
+
+	close($FILE);
+}
 
 # Every library/package that uses resources needs a list that maps resource variables to IDs in code form.
 # It starts with a simple text file that gets translated into a .java, which is in turn compiled into the package.

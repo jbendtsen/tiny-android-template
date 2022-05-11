@@ -7,12 +7,30 @@ my @DELETE_LIST = (
 	qr/app:layout_behavior="[^"^`]*"/
 );
 
-my $LIB_RES_DIR   = "lib/res";
-my $LIB_CLASS_DIR = "lib/classes";
+my $ANDROID_VERSION;
+my $LIB_RES_DIR;
+my $LIB_CLASS_DIR;
+my $CMD_DELETE;
+my $CMD_COPY;
+my $CMD_7Z;
 
-my $CMD_DELETE = "rm -rf";
-my $CMD_COPY   = "cp -r";
-my $CMD_7Z     = "7z";
+# get variables from includes.sh
+{
+	open(my $FILE, '<', "includes.sh");
+
+	foreach my $line (<$FILE>) {
+		if (length($line) < 2 or substr($line, 0, 1) eq '#') {
+			next;
+		}
+		my $decl = substr($line, 0, -1);
+		$decl =~ s/="/ = "/;
+		$decl =~ s/='/ = '/;
+		$decl = "\$" . $decl . ";\n";
+		eval($decl);
+	}
+
+	close($FILE);
+}
 
 # I make the assumption that all tags that don't directly belong to the <resources> tag can be ignored when looking for merge conflicts.
 # This is a helper function that keeps track of how many tag levels deep the interpreter is.
