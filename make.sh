@@ -13,9 +13,7 @@ OS=`uname -s`
 [[ $OS =~ "CYGWIN" || $OS =~ "MINGW" || $OS =~ "MSYS" ]] && SEP=";"
 
 if [ ! -d "build" ]; then
-	echo Build directory not found.
-	echo link.pl needs to be run before this script.
-	exit
+	mkdir build
 fi
 
 echo Cleaning build...
@@ -58,10 +56,10 @@ if [ ${#kt_list} -gt 2 ]; then
 	found_src=1
 fi
 
-if (( ! $found_src )); then
-	echo No project sources were found in the 'src' folder.
-	exit
-fi
+#if (( ! $found_src )); then
+#	echo No project sources were found in the 'src' folder.
+#	exit
+#fi
 
 echo Compiling classes into DEX bytecode...
 
@@ -69,11 +67,14 @@ dex_list=""
 [ -f "build/libs.dex" ] && dex_list+=" build/libs.dex"
 [ -f "build/libs_r.dex" ] && dex_list+=" build/libs_r.dex"
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
-$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list build/$package_path/*  --output build || exit
+class_list=""
+[ -d "build/$package_path" ] && class_list="build/$package_path/*"
+$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list $class_list --output build || exit
 
 echo Creating APK...
 
-res="build/res.zip"
+res=""
+[ -f "build/res.zip" ] && res+="build/res.zip"
 [ -f "build/res_libs.zip" ] && res+=" build/res_libs.zip"
 $TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt $res || exit
 

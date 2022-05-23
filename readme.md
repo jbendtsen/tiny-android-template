@@ -59,7 +59,7 @@ To select one to start from, rename `src-<template>` to `src` and `res-<template
 - `./export-libs.pl`
 	- Combines and compiles library resources while resolving resource name merge conflicts. Essentially, your code and the libraries/packages you use have resources which effectively must share the same namespace. This script is the first step in the merging process.
 
-4) Build libraries
+4) Build libraries - *__REQUIRED__ unless there are no resources or libraries*
 - `./link.pl`
 	- Links all resources, fixes library resource references and compiles library classes into DEX bytecode. Most of the work for creating the app is done here. The Android VM has an *interesting* method of locating and making use of resources; this script prepares project & library code and resources to match the expected layout/format.
 
