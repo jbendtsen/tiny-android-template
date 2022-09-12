@@ -110,12 +110,14 @@ sub get_package_from_manifest {
 # All resource IDs (including these ones) get overwritten later.
 
 sub gen_proj_rtxt {
-	my @r_txt = ();
+	# UPDATE 12/09/22: 'resources' and 'layout_id_defs' are now hashmaps, to allow for multiple versions of the same resource to be deduplicated.
+	# All that matters is that one version is written to R.txt, since this is ultimately how resources are accessed from code.
+	my %resources = ();
 	my $type_idx = 0;
 
 	# The meaning of "id" here is a type, not a number that is used to identify a resource
-	# We create a separate array and push it to the main r_txt at the end to work around the limitations of our gen_rjava() implementation.
-	my @layout_id_defs = ();
+	# We create a separate hashmap and push it to the main r_txt at the end to work around the limitations of our gen_rjava() implementation.
+	my %layout_id_defs = ();
 
 	foreach my $dir (<res/*>) {
 		my $sub_idx = 0;
@@ -126,8 +128,7 @@ sub gen_proj_rtxt {
 				open(my $fh, '<', $f);
 				foreach (<$fh>) {
 					if ($_ =~ /<([^ ]+).+name="([^"]+)"/) {
-						my $id = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
-						push(@r_txt, "int $1 $2 $id");
+						$resources{"$1 $2"} = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
 						$sub_idx++;
 					}
 				}
@@ -145,8 +146,7 @@ sub gen_proj_rtxt {
 					open(my $fh, '<', $f);
 					foreach (<$fh>) {
 						if ($_ =~ /@\+id\/([^"]+)/) {
-							my $id = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
-							push(@layout_id_defs, "int id $1 $id");
+							$layout_id_defs{$1} = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
 							$sub_idx++;
 						}
 					}
@@ -156,8 +156,7 @@ sub gen_proj_rtxt {
 				my $dot_idx = index($f, ".", $len);
 				my $name = ($dot_idx < 0) ? substr($f, $len) : substr($f, $len, $dot_idx - $len);
 
-				my $id = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
-				push(@r_txt, "int $type $name $id");
+				$resources{"$type $name"} = sprintf('0x7f%02x%04x', $type_idx, $sub_idx);
 				$sub_idx++;
 			}
 		}
@@ -165,7 +164,17 @@ sub gen_proj_rtxt {
 		$type_idx++;
 	}
 
-	push(@r_txt, @layout_id_defs);
+	my @r_txt = ();
+	
+	my @resource_keys = sort(keys(%resources));
+	foreach (@resource_keys) {
+		push(@r_txt, "int " . $_ . " " . $resources{$_});
+	}
+
+	my @layout_keys = sort(keys(%layout_id_defs));
+	foreach (@layout_keys) {
+		push(@r_txt, "int id " . $_ . " " . $layout_id_defs{$_});
+	}
 
 	open(my $fh, '>', "build/R.txt");
 	print $fh join("\n", @r_txt);
