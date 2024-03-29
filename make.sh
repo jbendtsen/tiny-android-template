@@ -69,7 +69,7 @@ dex_list=""
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
 class_list=""
 [ -d "build/$package_path" ] && class_list="build/$package_path/*"
-$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list $class_list --output build || exit
+$CMD_D8 --classpath "$PLATFORM_DIR/android.jar" $dex_list $class_list --output build || exit
 
 echo Creating APK...
 
@@ -80,13 +80,13 @@ $TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $
 
 # Pack the DEX file into a new APK file
 cd build
-$CMD_7Z a -tzip unaligned.apk classes.dex > /dev/null
+$CMD_7Z a -tzip unaligned.apk classes.dex > $DEV_NULL
 cd ..
 
 for t in ${TARGET_ARCHES[@]}; do
 	if [ -d $t ]; then
-		$CMD_7Z a -tzip build/unaligned.apk $t > /dev/null
-		$CMD_7Z rn -tzip build/unaligned.apk $t lib/$t > /dev/null
+		$CMD_7Z a -tzip build/unaligned.apk $t > $DEV_NULL
+		$CMD_7Z rn -tzip build/unaligned.apk $t lib/$t > $DEV_NULL
 	fi
 done
 

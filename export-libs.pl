@@ -11,8 +11,9 @@ my $ANDROID_VERSION;
 my $LIB_RES_DIR;
 my $LIB_CLASS_DIR;
 my $CMD_DELETE;
-my $CMD_COPY;
+my $CMD_COPY_RECURSIVE;
 my $CMD_7Z;
+my $DEV_NULL;
 
 # get variables from includes.sh
 {
@@ -106,13 +107,13 @@ if (!-d "lib") {
 
 if (-d "$LIB_RES_DIR") {
 	print("Clearing old library resources...\n");
-	exit if (system("$CMD_DELETE $LIB_RES_DIR") != 0);
+	exit if (system("$CMD_DELETE \"$LIB_RES_DIR\"") != 0);
 	mkdir("$LIB_RES_DIR");
 }
 
 if (-d "$LIB_CLASS_DIR") {
 	print("Clearing old library classes...\n");
-	exit if (system("$CMD_DELETE $LIB_CLASS_DIR") != 0);
+	exit if (system("$CMD_DELETE \"$LIB_CLASS_DIR\"") != 0);
 	mkdir("$LIB_CLASS_DIR");
 }
 
@@ -120,14 +121,14 @@ print("Extracting library resources and classes...\n");
 
 # A JAR is basically just a ZIP file packed with classes in a certain folder structure, so we just extract everything.
 foreach (<lib/*.jar>) {
-	system("$CMD_7Z x -y '$_' -o$LIB_CLASS_DIR > /dev/null");
+	system("$CMD_7Z x -y \"$_\" -o\"$LIB_CLASS_DIR\" > $DEV_NULL");
 }
 
 # AAR is the Android library format. It's essentially a ZIP containing a JAR and some resources.
 foreach (<lib/*.aar>) {
-	system("$CMD_7Z x -y '$_' -o$LIB_RES_DIR res classes.jar R.txt AndroidManifest.xml > /dev/null");
+	system("$CMD_7Z x -y \"$_\" -o\"$LIB_RES_DIR\" res classes.jar R.txt AndroidManifest.xml > $DEV_NULL");
 
-	system("$CMD_7Z x -y '$LIB_RES_DIR/classes.jar' -o$LIB_CLASS_DIR > /dev/null");
+	system("$CMD_7Z x -y \"$LIB_RES_DIR/classes.jar\" -o\"$LIB_CLASS_DIR\" > $DEV_NULL");
 	unlink("$LIB_RES_DIR/classes.jar");
 
 	my $name = substr($_, 4, -4);
@@ -187,7 +188,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 				}
 			}
 			else {
-				system("$CMD_COPY -r '$type_dir' $LIB_RES_DIR/res");
+				system("$CMD_COPY_RECURSIVE \"$type_dir\" \"$LIB_RES_DIR/res\"");
 			}
 			next;
 		}

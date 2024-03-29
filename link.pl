@@ -209,7 +209,7 @@ sub update_res_ids {
 	}
 	push(@table, $size);
 
-	# Make a copy of each R.txt and embed it into one homogenous string. This is likely faster than scanning each file individually.
+	# Make a copy of each R.txt and embed it into one homogeneous string. This is likely faster than scanning each file individually.
 	my $blob = pack($fmt, @files);
 
 	# Make an index of replacements to happen later. This means there (shouldn't) be any search-replace ordering issues.
@@ -366,7 +366,7 @@ my $aapt2_res = "build/res.zip";
 if (-d "lib") {
 	print("Compiling library resources...\n");
 
-	system("$TOOLS_DIR/aapt2 compile -o build/res_libs.zip --dir lib/res/res");
+	system("$TOOLS_DIR/aapt2 compile -o \"build/res_libs.zip\" --dir \"lib/res/res\"");
 	exit if ($? != 0);
 
 	$aapt2_res = "build/res_libs.zip " . $aapt2_res;
@@ -374,13 +374,13 @@ if (-d "lib") {
 
 print("Compiling project resources...\n");
 
-system("$TOOLS_DIR/aapt2 compile -o build/res.zip --dir res");
+system("$TOOLS_DIR/aapt2 compile -o \"build/res.zip\" --dir \"res\"");
 exit if ($? != 0);
 
 print("Linking resources...\n");
 
 # This is what gives us the actual set of properly unique IDs
-system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt $aapt2_res");
+system("$TOOLS_DIR/aapt2 link -o \"build/unaligned.apk\" --manifest \"AndroidManifest.xml\" -I \"$PLATFORM_DIR/android.jar\" --emit-ids ids.txt $aapt2_res");
 exit if ($? != 0);
 
 # Load those unique IDs
@@ -413,24 +413,24 @@ if (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR) {
 	print("Compiling resource maps...\n");
 	mkdir("$LIB_RES_DIR/R") if (!-d "$LIB_RES_DIR/R");
 
-	system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar -d $LIB_RES_DIR/R \@rjava_list.txt");
+	system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar -d \"$LIB_RES_DIR/R\" \@rjava_list.txt");
 	exit if ($? != 0);
 	unlink("rjava_list.txt");
 
-	system("$CMD_JAR --create --file build/libs_r.jar -C '$LIB_RES_DIR/R' .");
+	system("$CMD_JAR --create --file \"build/libs_r.jar\" -C \"$LIB_RES_DIR/R\" .");
 	exit if ($? != 0);
 
 	print("Compiling resource maps into DEX bytecode...\n");
-	system("$CMD_D8 --intermediate build/libs_r.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	system("$CMD_D8 --intermediate \"build/libs_r.jar\" --classpath \"$PLATFORM_DIR/android.jar\" --output \"build\"");
 	exit if ($? != 0);
 	rename("build/classes.dex", "build/libs_r.dex");
 
 	print("Fusing library classes into a .JAR...\n");
-	system("$CMD_JAR --create --file build/libs.jar -C '$LIB_CLASS_DIR' .");
+	system("$CMD_JAR --create --file \"build/libs.jar\" -C \"$LIB_CLASS_DIR\" .");
 	exit if ($? != 0);
 
 	print("Compiling library .JAR into DEX bytecode...\n");
-	system("$CMD_D8 --intermediate build/libs.jar --classpath $PLATFORM_DIR/android.jar --output build");
+	system("$CMD_D8 --intermediate \"build/libs.jar\" --classpath \"$PLATFORM_DIR/android.jar\" --output \"build\"");
 	exit if ($? != 0);
 	rename("build/classes.dex", "build/libs.dex");
 }
