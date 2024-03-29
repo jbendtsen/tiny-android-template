@@ -388,7 +388,8 @@ open(my $fh, '<', "ids.txt");
 chomp(my @ids = <$fh>);
 close($fh);
 
-system("$CMD_DELETE ids.txt");
+# system("$CMD_DELETE \"ids.txt\"");
+unlink("ids.txt");
 
 print("Generating project R.txt...\n");
 

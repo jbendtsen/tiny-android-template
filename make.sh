@@ -19,7 +19,7 @@ fi
 echo Cleaning build...
 
 # Deletes all folders and APK files inside the build folder
-$CMD_DELETE build/*.apk build/*/ 2> /dev/null
+rm -rf build/*.apk build/*/ 2> $DEV_NULL
 
 MF=`cat AndroidManifest.xml`
 TERM="package=[\'\"]([a-z0-9.]+)"
@@ -36,19 +36,19 @@ fi
 
 echo Compiling project source...
 
-java_list=`$CMD_FIND src -name "*.java"`
-kt_list=`$CMD_FIND src -name "*.kt"`
+java_list=`$CMD_FIND_SRC_JAVA`
+kt_list=`$CMD_FIND_SRC_KOTLIN` || ""
 
 # If string length of java_list > 2 then we've got some Java source
 # I picked '2' in case newlines bump it up from 0, though it's likely overkill
 found_src=0
 if [ ${#java_list} -gt 2 ]; then
 	jars=""
+	jars+="$PLATFORM_DIR/android.jar${SEP}"
 	[ -f "build/R.jar" ] && jars+="build/R.jar${SEP}"
 	[ -f "build/libs.jar" ] && jars+="build/libs.jar${SEP}"
-	jars+="$PLATFORM_DIR/android.jar"
 
-	$CMD_JAVAC -source 11 -target 11 -classpath $jars -d build $java_list || exit
+	$CMD_JAVAC -source 8 -target 8 -bootclasspath $jars -d build $java_list || exit
 	found_src=1
 fi
 if [ ${#kt_list} -gt 2 ]; then

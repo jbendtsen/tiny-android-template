@@ -172,6 +172,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 
 				foreach my $fname (<$type_dir/*>) {
 					open(my $fh, '<', $fname);
+					binmode($fh);
 					read($fh, my $content, -s $fh);
 					close($fh);
 
@@ -183,6 +184,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 					my $out_xml = "$out_dir/$xml_name";
 
 					open($fh, '>', $out_xml);
+					binmode($fh);
 					print $fh $content;
 					close($fh);
 				}
