@@ -37,7 +37,7 @@ fi
 echo Compiling project source...
 
 java_list=`$CMD_FIND_SRC_JAVA`
-kt_list=`$CMD_FIND_SRC_KOTLIN` || ""
+# kt_list=`$CMD_FIND_SRC_KOTLIN` || ""
 
 # If string length of java_list > 2 then we've got some Java source
 # I picked '2' in case newlines bump it up from 0, though it's likely overkill
@@ -51,10 +51,10 @@ if [ ${#java_list} -gt 2 ]; then
 	$CMD_JAVAC -source 8 -target 8 -bootclasspath $jars -d build $java_list || exit
 	found_src=1
 fi
-if [ ${#kt_list} -gt 2 ]; then
-	$CMD_KOTLINC -d build -cp "build/R.jar${SEP}build/libs.jar${SEP}$PLATFORM_DIR/android.jar" -jvm-target 1.8 $kt_list || exit
-	found_src=1
-fi
+# if [ ${#kt_list} -gt 2 ]; then
+# 	$CMD_KOTLINC -d build -cp "$PLATFORM_DIR/android.jar${SEP}build/R.jar${SEP}build/libs.jar" -jvm-target 1.8 $kt_list || exit
+# 	found_src=1
+# fi
 
 #if (( ! $found_src )); then
 #	echo No project sources were found in the 'src' folder.
