@@ -1,0 +1,6 @@
+build/
+lib/
+app.apk
+keystore.jks
+ids.txt
+NUL
