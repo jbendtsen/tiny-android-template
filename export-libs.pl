@@ -2,6 +2,9 @@
 
 use strict;
 use warnings;
+use File::Spec;
+use File::Path qw(rmtree);
+use File::Copy qw(copy);
 
 my @DELETE_LIST = (
 	qr/app:layout_behavior="[^"^`]*"/
@@ -10,10 +13,8 @@ my @DELETE_LIST = (
 my $ANDROID_VERSION;
 my $LIB_RES_DIR;
 my $LIB_CLASS_DIR;
-my $CMD_DELETE;
-my $CMD_COPY_RECURSIVE;
 my $CMD_7Z;
-my $DEV_NULL;
+my $DEVNULL = File::Spec->devnull; # this is named differently from "$DEV_NULL" defined in "includes.sh", because we don't want this to get overwritten by it.
 
 # get variables from includes.sh
 {
@@ -31,6 +32,31 @@ my $DEV_NULL;
 	}
 
 	close($FILE);
+}
+
+# Recurive directory copying function
+sub dircopy {
+    my ($source_dir, $destination_dir) = @_;
+
+    opendir(my $dh, $source_dir) or die "Cannot open source directory '$source_dir': $!";
+	if (!-d $destination_dir) { make_path($destination_dir); }
+
+    while (my $entry = readdir($dh)) {
+        next if $entry eq '.' or $entry eq '..';
+
+        my $source_path = "$source_dir/$entry";
+        my $target_path = "$destination_dir/$entry";
+
+        if (-d $source_path) {
+            # Recurse into subdirectories
+            dircopy($source_path, $target_path);
+        } else {
+            # Copy regular files using File::Copy
+            copy($source_path, $target_path) or die "Copy failed: $!";
+        }
+    }
+
+    closedir($dh);
 }
 
 # I make the assumption that all tags that don't directly belong to the <resources> tag can be ignored when looking for merge conflicts.
@@ -107,13 +133,13 @@ if (!-d "lib") {
 
 if (-d "$LIB_RES_DIR") {
 	print("Clearing old library resources...\n");
-	exit if (system("$CMD_DELETE \"$LIB_RES_DIR\"") != 0);
+	rmtree($LIB_RES_DIR) or die "Cannot remove directory \"$LIB_RES_DIR\": $!";
 	mkdir("$LIB_RES_DIR");
 }
 
 if (-d "$LIB_CLASS_DIR") {
 	print("Clearing old library classes...\n");
-	exit if (system("$CMD_DELETE \"$LIB_CLASS_DIR\"") != 0);
+	rmtree($LIB_CLASS_DIR) or die "Cannot remove directory \"$LIB_CLASS_DIR\": $!";
 	mkdir("$LIB_CLASS_DIR");
 }
 
@@ -121,14 +147,14 @@ print("Extracting library resources and classes...\n");
 
 # A JAR is basically just a ZIP file packed with classes in a certain folder structure, so we just extract everything.
 foreach (<lib/*.jar>) {
-	system("$CMD_7Z x -y \"$_\" -o\"$LIB_CLASS_DIR\" > $DEV_NULL");
+	system("$CMD_7Z x -y \"$_\" -o\"$LIB_CLASS_DIR\" > $DEVNULL");
 }
 
 # AAR is the Android library format. It's essentially a ZIP containing a JAR and some resources.
 foreach (<lib/*.aar>) {
-	system("$CMD_7Z x -y \"$_\" -o\"$LIB_RES_DIR\" res classes.jar R.txt AndroidManifest.xml > $DEV_NULL");
+	system("$CMD_7Z x -y \"$_\" -o\"$LIB_RES_DIR\" res classes.jar R.txt AndroidManifest.xml > $DEVNULL");
 
-	system("$CMD_7Z x -y \"$LIB_RES_DIR/classes.jar\" -o\"$LIB_CLASS_DIR\" > $DEV_NULL");
+	system("$CMD_7Z x -y \"$LIB_RES_DIR/classes.jar\" -o\"$LIB_CLASS_DIR\" > $DEVNULL");
 	unlink("$LIB_RES_DIR/classes.jar");
 
 	my $name = substr($_, 4, -4);
@@ -190,7 +216,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 				}
 			}
 			else {
-				system("$CMD_COPY_RECURSIVE \"$type_dir\" \"$LIB_RES_DIR/res\"");
+				dircopy($type_dir, "$LIB_RES_DIR/res") or die "Cannot copy: $!";
 			}
 			next;
 		}

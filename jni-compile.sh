@@ -5,8 +5,8 @@ source includes.sh
 
 OUTPUT="libjni-example.so"
 
-#CPP_FILES=`find src -name "*.cpp"`
-C_FILES=`find src -name "*.c"`
+#CPP_FILES=`$CMD_FIND src -name "*.cpp"`
+C_FILES=`$CMD_FIND src -name "*.c"`
 
 INCLUDE_DIRS="-I$NDK_INCLUDE_DIR"
 LIB_DIRS="-L$NDK_LIB_DIR/aarch64-linux-android/$API_LEVEL"

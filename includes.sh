@@ -14,8 +14,8 @@ REPO="https://dl.google.com/dl/android/maven2"
 KEYSTORE="keystore.jks"
 KS_PASS="123456"
 
-TOOLS_DIR="$SDK_DIR/build-tools/28.0.3"
-PLATFORM_DIR="$SDK_DIR/platforms/android-28"
+TOOLS_DIR="$SDK_DIR/build-tools/${API_LEVEL}" # verify that the directory with this name exists, because it may be named a little different.
+PLATFORM_DIR="$SDK_DIR/platforms/android-${API_LEVEL}"
 
 NDK_DIR="$SDK_DIR/ndk/${NDK_VERSION}"
 NDK_BIN_DIR="$NDK_DIR/toolchains/llvm/prebuilt/$HOST_OS/bin"
@@ -30,12 +30,10 @@ PKG_OUTPUT="lib"
 JAR_TOOLS="java -Xmx1024M -Xss1m -jar $TOOLS_DIR/lib"
 
 CMD_7Z="7z"
-CMD_MKDIR="mkdir" # use "mkdir" for windows, and "mkdir" for linux
-CMD_RENAME="ren" # use "ren" for windows, and "mv" for linux
-CMD_COPY_RECURSIVE="xcopy" # use "xcopy" for windows, and "cp -r" for linux
-CMD_DELETE="rmdir /s /q" # use "rmdir /s /q" for windows, and "rm -rf" for linux
-CMD_FIND_SRC_JAVA="ls -r src/**.java" # use "ls -r src/**.java" for windows, and "usr/bin/find src -name \"*.java\"" for linux
-CMD_FIND_SRC_KOTLIN="ls -r src/**.kt" # use "ls -r src/**.kt" for windows, and "usr/bin/find src -name \"*.kt\"" for linux
+CMD_MKDIR="mkdir"
+CMD_RENAME="mv"
+CMD_DELETE="rm -rf"
+CMD_FIND="find"
 CMD_CURL="curl"
 CMD_SED="sed"
 CMD_JAR="jar"
@@ -46,4 +44,4 @@ CMD_KOTLINC="kotlinc"
 CMD_ADB="$SDK_DIR/platform-tools/adb"
 CMD_D8="$CMD_JAVA -Xmx1024M -Xss1m -cp $TOOLS_DIR/lib/d8.jar com.android.tools.r8.D8"
 
-DEV_NULL="NUL" # use "NUL" for windows, and "/dev/null" for linux
+DEV_NULL="/dev/null" # device null location. "/dev/null" works in git-bash on windows. but some alternate bash implementation on windows may require you to use "NUL" instead.

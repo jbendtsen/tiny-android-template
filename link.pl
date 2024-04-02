@@ -9,7 +9,6 @@ my $SDK_DIR;
 my $TOOLS_DIR;
 my $PLATFORM_DIR;
 
-my $CMD_DELETE;
 my $CMD_JAR;
 my $CMD_JAVAC;
 my $CMD_JAVA;
@@ -388,7 +387,6 @@ open(my $fh, '<', "ids.txt");
 chomp(my @ids = <$fh>);
 close($fh);
 
-# system("$CMD_DELETE \"ids.txt\"");
 unlink("ids.txt");
 
 print("Generating project R.txt...\n");

@@ -13,13 +13,13 @@ OS=`uname -s`
 [[ $OS =~ "CYGWIN" || $OS =~ "MINGW" || $OS =~ "MSYS" ]] && SEP=";"
 
 if [ ! -d "build" ]; then
-	mkdir build
+	$CMD_MKDIR build
 fi
 
 echo Cleaning build...
 
 # Deletes all folders and APK files inside the build folder
-rm -rf build/*.apk build/*/ 2> $DEV_NULL
+$CMD_DELETE build/*.apk build/*/ 2> $DEV_NULL
 
 MF=`cat AndroidManifest.xml`
 TERM="package=[\'\"]([a-z0-9.]+)"
@@ -36,8 +36,8 @@ fi
 
 echo Compiling project source...
 
-java_list=`$CMD_FIND_SRC_JAVA`
-# kt_list=`$CMD_FIND_SRC_KOTLIN` || ""
+java_list=`$CMD_FIND src -name "*.java"`
+kt_list=`$CMD_FIND src -name "*.kt"`
 
 # If string length of java_list > 2 then we've got some Java source
 # I picked '2' in case newlines bump it up from 0, though it's likely overkill
@@ -51,10 +51,10 @@ if [ ${#java_list} -gt 2 ]; then
 	$CMD_JAVAC -source 8 -target 8 -bootclasspath $jars -d build $java_list || exit
 	found_src=1
 fi
-# if [ ${#kt_list} -gt 2 ]; then
-# 	$CMD_KOTLINC -d build -cp "$PLATFORM_DIR/android.jar${SEP}build/R.jar${SEP}build/libs.jar" -jvm-target 1.8 $kt_list || exit
-# 	found_src=1
-# fi
+if [ ${#kt_list} -gt 2 ]; then
+	$CMD_KOTLINC -d build -cp "$PLATFORM_DIR/android.jar${SEP}build/R.jar${SEP}build/libs.jar" -jvm-target 1.8 $kt_list || exit
+	found_src=1
+fi
 
 #if (( ! $found_src )); then
 #	echo No project sources were found in the 'src' folder.
