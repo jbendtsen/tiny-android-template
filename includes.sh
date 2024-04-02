@@ -1,5 +1,6 @@
 #!/bin/bash
 # Roughly arranged in descending order of how likely you'll need to change each value
+# Note that windows users need to install a bash terminal for the scripts to run. Git-Bash is a good option, as it comes bundled with git.
 
 HOST_OS="windows-x86_64" # use "windows-x86_64" for windows, and "linux-x86_64" for linux
 API_LEVEL="28"

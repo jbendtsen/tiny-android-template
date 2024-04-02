@@ -48,7 +48,7 @@ if [ ${#java_list} -gt 2 ]; then
 	[ -f "build/R.jar" ] && jars+="build/R.jar${SEP}"
 	[ -f "build/libs.jar" ] && jars+="build/libs.jar${SEP}"
 
-	$CMD_JAVAC -source 8 -target 8 -bootclasspath $jars -d build $java_list || exit
+	$CMD_JAVAC --release 8 -classpath $jars -d build $java_list || exit
 	found_src=1
 fi
 if [ ${#kt_list} -gt 2 ]; then

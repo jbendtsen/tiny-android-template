@@ -198,6 +198,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 
 				foreach my $fname (<$type_dir/*>) {
 					open(my $fh, '<', $fname);
+					# files must be read in binary mode, otherwise windows will interpret any LF-newline ("\n") byte as two CRLF-newline bytes ("\r\n").
 					binmode($fh);
 					read($fh, my $content, -s $fh);
 					close($fh);
@@ -210,6 +211,7 @@ foreach my $pkg (<$LIB_RES_DIR/res_*>) {
 					my $out_xml = "$out_dir/$xml_name";
 
 					open($fh, '>', $out_xml);
+					# files must be read in binary mode, otherwise windows will interpret any LF-newline ("\n") byte as two CRLF-newline bytes ("\r\n").
 					binmode($fh);
 					print $fh $content;
 					close($fh);

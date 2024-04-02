@@ -412,7 +412,7 @@ if (-d $LIB_RES_DIR && -d $LIB_CLASS_DIR) {
 	print("Compiling resource maps...\n");
 	mkdir("$LIB_RES_DIR/R") if (!-d "$LIB_RES_DIR/R");
 
-	system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar -d \"$LIB_RES_DIR/R\" \@rjava_list.txt");
+	system("$CMD_JAVAC --release 8 -classpath \"$PLATFORM_DIR/android.jar\" -d \"$LIB_RES_DIR/R\" \@rjava_list.txt");
 	exit if ($? != 0);
 	unlink("rjava_list.txt");
 
@@ -453,7 +453,7 @@ print("Compiling project R.java...\n");
 
 mkdir("build/R") if (!-d "build/R");
 
-system("$CMD_JAVAC -source 8 -target 8 -bootclasspath $PLATFORM_DIR/android.jar build/R.java -d build/R");
+system("$CMD_JAVAC --release 8 -classpath \"$PLATFORM_DIR/android.jar\" build/R.java -d build/R");
 exit if ($? != 0);
 
 system("$CMD_JAR --create --file build/R.jar -C build/R .");
