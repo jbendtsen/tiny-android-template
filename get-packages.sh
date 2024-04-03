@@ -70,7 +70,7 @@ if [ $# -lt 1 ]; then
 	exit
 fi
 
-[ ! -d "$PKG_OUTPUT" ] && mkdir -p "$PKG_OUTPUT"
+[ ! -d "$PKG_OUTPUT" ] && $CMD_MKDIR -p "$PKG_OUTPUT"
 
 if [ $# -eq 2 ]; then
 	get_naive $1 $2

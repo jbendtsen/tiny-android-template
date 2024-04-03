@@ -13,13 +13,13 @@ OS=`uname -s`
 [[ $OS =~ "CYGWIN" || $OS =~ "MINGW" || $OS =~ "MSYS" ]] && SEP=";"
 
 if [ ! -d "build" ]; then
-	mkdir build
+	$CMD_MKDIR build
 fi
 
 echo Cleaning build...
 
 # Deletes all folders and APK files inside the build folder
-$CMD_DELETE build/*.apk build/*/ 2> /dev/null
+$CMD_DELETE build/*.apk build/*/ 2> $DEV_NULL
 
 MF=`cat AndroidManifest.xml`
 TERM="package=[\'\"]([a-z0-9.]+)"
@@ -44,15 +44,15 @@ kt_list=`$CMD_FIND src -name "*.kt"`
 found_src=0
 if [ ${#java_list} -gt 2 ]; then
 	jars=""
+	jars+="$PLATFORM_DIR/android.jar${SEP}"
 	[ -f "build/R.jar" ] && jars+="build/R.jar${SEP}"
 	[ -f "build/libs.jar" ] && jars+="build/libs.jar${SEP}"
-	jars+="$PLATFORM_DIR/android.jar"
 
-	$CMD_JAVAC -source 11 -target 11 -classpath $jars -d build $java_list || exit
+	$CMD_JAVAC --release 8 -classpath $jars -d build $java_list || exit
 	found_src=1
 fi
 if [ ${#kt_list} -gt 2 ]; then
-	$CMD_KOTLINC -d build -cp "build/R.jar${SEP}build/libs.jar${SEP}$PLATFORM_DIR/android.jar" -jvm-target 1.8 $kt_list || exit
+	$CMD_KOTLINC -d build -cp "$PLATFORM_DIR/android.jar${SEP}build/R.jar${SEP}build/libs.jar" -jvm-target 1.8 $kt_list || exit
 	found_src=1
 fi
 
@@ -69,7 +69,7 @@ dex_list=""
 [ -f "build/kotlin.dex" ] && dex_list+=" build/kotlin.dex"
 class_list=""
 [ -d "build/$package_path" ] && class_list="build/$package_path/*"
-$CMD_D8 --classpath $PLATFORM_DIR/android.jar $dex_list $class_list --output build || exit
+$CMD_D8 --classpath "$PLATFORM_DIR/android.jar" $dex_list $class_list --output build || exit
 
 echo Creating APK...
 
@@ -80,13 +80,13 @@ $TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $
 
 # Pack the DEX file into a new APK file
 cd build
-$CMD_7Z a -tzip unaligned.apk classes.dex > /dev/null
+$CMD_7Z a -tzip unaligned.apk classes.dex > $DEV_NULL
 cd ..
 
 for t in ${TARGET_ARCHES[@]}; do
 	if [ -d $t ]; then
-		$CMD_7Z a -tzip build/unaligned.apk $t > /dev/null
-		$CMD_7Z rn -tzip build/unaligned.apk $t lib/$t > /dev/null
+		$CMD_7Z a -tzip build/unaligned.apk $t > $DEV_NULL
+		$CMD_7Z rn -tzip build/unaligned.apk $t lib/$t > $DEV_NULL
 	fi
 done
 
