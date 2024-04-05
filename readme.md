@@ -52,8 +52,9 @@ To select one to start from, rename `src-<template>` to `src` and `res-<template
 	- This will prepare a copy of the Kotlin standard library for your project in DEX form, which is required for a Kotlin app on Android.
 
 2) Get library packages - *Only necessary if there are dependencies*
-- `./get-packages.sh pkg-list.txt`
-	- This will retrieve AndroidX library packages from Google's Maven repository. The included `pkg-list.txt` contains the list of packages required for "Hello World".
+- `./get-packages.sh <package_list>`
+	- This will retrieve AndroidX library packages from Google's Maven repository. The included `api-28-pkg-list.txt` contains the list of packages required for "Hello World" for Android API 28.
+	- To download newer AndroidX packages, run `./androidx-package-list.py <output_package_list>` to obtain a fresh list of versions before running `get-packages.sh`.
 
 3) Unpack & merge libraries - *Only necessary if there are dependencies*
 - `./export-libs.pl`
