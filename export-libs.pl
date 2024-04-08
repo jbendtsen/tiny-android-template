@@ -11,28 +11,30 @@ my @DELETE_LIST = (
 );
 
 my $ANDROID_VERSION;
+my $PKG_OUTPUT;
 my $LIB_RES_DIR;
 my $LIB_CLASS_DIR;
 my $CMD_7Z;
-my $DEVNULL = File::Spec->devnull; # this is named differently from "$DEV_NULL" defined in "includes.sh", because we don't want this to get overwritten by it.
 
-# get variables from includes.sh
+# This seems to be the only way to include perl files without creating modules and messing with environment variables.
+# 'do' and 'require' silently and mysteriously don't work.
+# The problem seems to be ideological, which makes this workaround all the more ironic, but that's Perl for you.
 {
-	open(my $FILE, '<', "includes.sh");
+	open(my $FILE, '<', "includes.pl");
 
 	foreach my $line (<$FILE>) {
 		if (length($line) < 2 or substr($line, 0, 1) eq '#') {
 			next;
 		}
-		my $decl = substr($line, 0, -1);
-		$decl =~ s/="/ = "/;
-		$decl =~ s/='/ = '/;
-		$decl = "\$" . $decl . ";\n";
-		eval($decl);
+		my $decl = $line =~ s/\r//r;
+		$decl =~ s/\n//;
+		eval($decl . "\n");
 	}
 
 	close($FILE);
 }
+
+my $DEV_NULL = File::Spec->devnull;
 
 # Recurive directory copying function
 sub dircopy {
@@ -147,14 +149,14 @@ print("Extracting library resources and classes...\n");
 
 # A JAR is basically just a ZIP file packed with classes in a certain folder structure, so we just extract everything.
 foreach (<lib/*.jar>) {
-	system("$CMD_7Z x -y \"$_\" -o\"$LIB_CLASS_DIR\" > $DEVNULL");
+	system("$CMD_7Z x -y \"$_\" -o\"$LIB_CLASS_DIR\" > $DEV_NULL");
 }
 
 # AAR is the Android library format. It's essentially a ZIP containing a JAR and some resources.
 foreach (<lib/*.aar>) {
-	system("$CMD_7Z x -y \"$_\" -o\"$LIB_RES_DIR\" res classes.jar R.txt AndroidManifest.xml > $DEVNULL");
+	system("$CMD_7Z x -y \"$_\" -o\"$LIB_RES_DIR\" res classes.jar R.txt AndroidManifest.xml > $DEV_NULL");
 
-	system("$CMD_7Z x -y \"$LIB_RES_DIR/classes.jar\" -o\"$LIB_CLASS_DIR\" > $DEVNULL");
+	system("$CMD_7Z x -y \"$LIB_RES_DIR/classes.jar\" -o\"$LIB_CLASS_DIR\" > $DEV_NULL");
 	unlink("$LIB_RES_DIR/classes.jar");
 
 	my $name = substr($_, 4, -4);

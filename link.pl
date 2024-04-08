@@ -14,22 +14,23 @@ my $CMD_JAVAC;
 my $CMD_JAVA;
 my $CMD_D8;
 
+my $PKG_OUTPUT;
 my $LIB_RES_DIR;
 my $LIB_CLASS_DIR;
 
-# get variables from includes.sh
+# This seems to be the only way to include perl files without creating modules and messing with environment variables.
+# 'do' and 'require' silently and mysteriously don't work.
+# The problem seems to be ideological, which makes this workaround all the more ironic, but that's Perl for you.
 {
-	open(my $FILE, '<', "includes.sh");
+	open(my $FILE, '<', "includes.pl");
 
 	foreach my $line (<$FILE>) {
 		if (length($line) < 2 or substr($line, 0, 1) eq '#') {
 			next;
 		}
-		my $decl = substr($line, 0, -1);
-		$decl =~ s/="/ = "/;
-		$decl =~ s/='/ = '/;
-		$decl = "\$" . $decl . ";\n";
-		eval($decl);
+		my $decl = $line =~ s/\r//r;
+		$decl =~ s/\n//;
+		eval($decl . "\n");
 	}
 
 	close($FILE);
