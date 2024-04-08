@@ -3,9 +3,9 @@
 
 $ANDROID_VERSION = "13";
 $SDK_DIR = "C:/Android/sdk";
-$KOTLIN_LIB_DIR = "/usr/share/kotlin/lib";
+$KOTLIN_LIB_DIR = "C:/kotlinc/lib";
 
-$MIN_SDK_VERSION = 15;
+$MIN_SDK_VERSION = 21;
 
 $REPO = "https://dl.google.com/dl/android/maven2";
 

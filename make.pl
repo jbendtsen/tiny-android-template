@@ -136,15 +136,10 @@ if ($java_list) {
 print "Compiling classes into DEX bytecode...\n";
 
 my $dex_list = "";
-if (-f "build/libs.dex") {
-	$dex_list .= " build/libs.dex";
-}
-if (-f "build/libs_r.dex") {
-	$dex_list .= " build/libs_r.dex";
-}
-if (-f "build/kotlin.dex") {
-	$dex_list .= " build/kotlin.dex";
-}
+$dex_list .= " build/libs.dex" if (-f "build/libs.dex");
+$dex_list .= " build/libs_r.dex" if (-f "build/libs_r.dex");
+$dex_list .= " build/kotlin-stdlib.dex" if (-f "build/kotlin-stdlib.dex");
+$dex_list .= " build/kotlinx-coroutines-core-jvm.dex" if (-f "build/kotlinx-coroutines-core-jvm.dex");
 
 my $class_list = "";
 if (-d "build/$package_path") {
@@ -156,12 +151,8 @@ system("$CMD_D8 --classpath \"$PLATFORM_DIR/android.jar\" $dex_list $class_list 
 print "Creating APK...\n";
 
 my $res = "";
-if (-f "build/res.zip") {
-	$res .= "build/res.zip";
-}
-if (-f "build/res_libs.zip") {
-	$res .= " build/res_libs.zip";
-}
+$res .= "build/res.zip" if (-f "build/res.zip");
+$res .= " build/res_libs.zip" if (-f "build/res_libs.zip");
 system("$TOOLS_DIR/aapt2 link -o build/unaligned.apk --manifest AndroidManifest.xml -I $PLATFORM_DIR/android.jar --emit-ids ids.txt $res") and exit;
 
 # Pack the DEX file into a new APK file

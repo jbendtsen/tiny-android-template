@@ -1,5 +1,6 @@
 build/
 lib/
 app.apk
+app.apk.idsig
 keystore.jks
 ids.txt

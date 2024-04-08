@@ -9,7 +9,7 @@ However, I still wanted to write apps for Android, so I developed this template 
 
 ### Requirements
 - Java Development Kit (JDK)
-- Kotlin Compiler ***(optional)***
+- Kotlin Compiler ***(required if using the latest AndroidX libraries, even if your project itself does not use Kotlin)***
 - Android SDK
 - 7-Zip
 - Perl (either Strawberry Perl or Cygwin/MSYS if on Windows)
@@ -69,7 +69,7 @@ To select one to start from, rename `src-<template>` to `src` and `res-<template
 	- Links all resources, fixes library resource references and compiles library classes into DEX bytecode. Most of the work for creating the app is done here. The Android VM has an *interesting* method of locating and making use of resources; this script prepares project & library code and resources to match the expected layout/format.
 
 6) Compile native code - *Only necessary for projects that use JNI*
-- `./jni-compile.pl`
+- `./jni-compile.py`
 	- If you plan to use JNI, you'll likely need to modify this script to suit your needs
 
 7) Create APK (you will need a KeyStore file for this. See **"Notes"** for details.)
@@ -110,6 +110,8 @@ This will ensure that any attributes that can't be defined without a library you
 As long as your JDK version can target Java 8, this should work. Tested with OpenJDK 13.0.2.
 
 You will need to make sure the `bin` directories for the JDK and for 7-Zip (and the Kotlin compiler if you're using Kotlin) are in the $PATH variable.
+
+This template is not yet compatible with Kotlin Multiplatform libraries such as `androidx.collection` version `1.4.0`. For now, older versions of these libraries must be used, e.g. `1.2.0`.
 
 In order to build the APK, `apksigner` needs a KeyStore file. This can be generated with `keytool`, which comes with the JDK.
 The following command generates a KeyStore file (keystore.jks) which is valid for 10000 days:
